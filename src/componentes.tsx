@@ -30,12 +30,20 @@ export function BotaoWhatsapp({ nome, onClick }: { nome: string; onClick: () => 
 export function Campo({
   rotulo,
   dica,
+  icone,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { rotulo: string; dica?: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & { rotulo: string; dica?: string; icone?: ReactNode }) {
   return (
     <label className="campo">
       <span className="campo-rotulo">{rotulo}</span>
-      <input {...props} />
+      {icone ? (
+        <span className="campo-com-icone">
+          {icone}
+          <input {...props} />
+        </span>
+      ) : (
+        <input {...props} />
+      )}
       {dica && <span className="campo-dica">{dica}</span>}
     </label>
   )

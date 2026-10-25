@@ -28,6 +28,13 @@ export const IconeVoltar = (p: P) => <Base {...p}><path d="m15 5-7 7 7 7" /></Ba
 export const IconeRecolher = (p: P) => (
   <Base {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M16 9.5 13.5 12l2.5 2.5" /></Base>
 )
+export const IconeEmail = (p: P) => <Base {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 6.5 8.5 6.5 8.5-6.5" /></Base>
+export const IconeCadeado = (p: P) => <Base {...p}><rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></Base>
+export const IconePessoa = (p: P) => <Base {...p}><circle cx="12" cy="8" r="4" /><path d="M4.5 20.5c.8-4 3.8-6.5 7.5-6.5s6.7 2.5 7.5 6.5" /></Base>
+export const IconeOlho = (p: P) => <Base {...p}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></Base>
+export const IconeOlhoFechado = (p: P) => (
+  <Base {...p}><path d="M10 5.7a9 9 0 0 1 2-.2c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-2.4 3.2M6.4 6.9C3.9 8.6 2.5 12 2.5 12S6 18.5 12 18.5c1.9 0 3.5-.6 4.9-1.5" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" /></Base>
+)
 export const IconeSeta = (p: P) => <Base {...p}><path d="m9 5 7 7-7 7" /></Base>
 export const IconeMais = (p: P) => <Base {...p}><path d="M12 5v14M5 12h14" /></Base>
 export const IconeMenos = (p: P) => <Base {...p}><path d="M5 12h14" /></Base>

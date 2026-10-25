@@ -325,49 +325,75 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .painel-acao:first-child { border-top: none; }
 .painel-acao svg { flex: none; }
 
-/* Entrar: faixa azul Timol com as linhas de campo, e a folha branca que sobe por cima ao abrir */
-.entrar { min-height: 100vh; display: flex; flex-direction: column; background: var(--campo), var(--marca); }
-.entrar-faixa {
-  padding: calc(2rem + env(safe-area-inset-top)) 1.5rem 2rem;
-  color: #fff; display: flex; flex-direction: column; gap: 1.1rem;
-  max-width: 480px; width: 100%; margin: 0 auto;
-  animation: surgir 0.5s ease-out both;
+/* Entrar: fundo azul Timol com as linhas de campo saindo do cartão, como as listras do "T" do logo */
+.entrar {
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem;
+  padding: calc(1.5rem + env(safe-area-inset-top)) 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  background:
+    repeating-radial-gradient(circle at 50% 42%, transparent 0 34px, rgba(255, 255, 255, 0.07) 34px 36px),
+    radial-gradient(circle at 50% 42%, var(--marca-media), var(--marca) 60%, var(--marca-forte));
 }
-.entrar-marca { display: flex; align-items: center; gap: 0.65rem; font-weight: 800; font-size: 1.2rem; letter-spacing: 0.01em; }
-.entrar-marca img { border-radius: var(--raio-pequeno); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.5); }
-.entrar-promessa { font-size: 1.6rem; line-height: 1.2; font-weight: 800; max-width: 18ch; }
-.entrar-folha {
-  flex: 1; background: var(--painel); border-radius: var(--raio) var(--raio) 0 0;
-  padding: 1.25rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
-  max-width: 600px; width: 100%; margin: 0 auto;
-  animation: subir 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both;
+.entrar-cartao {
+  position: relative; width: 100%; max-width: 460px;
+  background: var(--painel); border-radius: var(--raio);
+  box-shadow: 0 2px 0 rgba(0, 20, 60, 0.25), 0 24px 48px rgba(0, 20, 60, 0.35);
+  padding: 2rem 1.5rem 1.5rem;
+  display: flex; flex-direction: column; gap: 1.25rem;
+  animation: subir 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-.entrar-folha > * { max-width: 432px; margin-left: auto; margin-right: auto; }
-.entrar-conteudo { display: flex; flex-direction: column; gap: 1.1rem; animation: aparecer 0.25s ease-out both; }
+.entrar-selo {
+  align-self: center; display: grid; place-items: center; width: 84px; height: 84px; margin-top: -0.25rem;
+  background: var(--painel); border-radius: var(--raio);
+  box-shadow: inset 0 0 0 1px var(--linha), 0 6px 16px rgba(0, 40, 100, 0.14);
+}
+.entrar-selo img { border-radius: var(--raio-pequeno); }
+.entrar-selo-pronto { background: var(--marca); color: #fff; box-shadow: 0 6px 16px rgba(0, 40, 100, 0.25); animation: pulsar 0.5s ease-out both; }
+.entrar-selo-pronto svg { width: 42px; height: 42px; stroke-width: 2.5; }
+.entrar-voltar { position: absolute; top: 1.25rem; left: 1.25rem; margin: 0; }
+.entrar-conteudo { display: flex; flex-direction: column; gap: 1.25rem; animation: aparecer 0.25s ease-out both; }
+.entrar-titulo { display: flex; flex-direction: column; gap: 0.4rem; text-align: center; }
+.entrar-titulo h1 { font-size: 1.75rem; }
+.entrar-titulo .topo-sub { max-width: 36ch; margin: 0 auto; }
+.entrar .confira { text-align: center; }
+.entrar-esqueci {
+  align-self: flex-end; margin: -0.6rem 0 -0.4rem; min-height: 44px; padding: 0 0.1rem;
+  background: none; border: none; color: var(--marca); font-weight: 700;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.entrar-google {
+  display: flex; align-items: center; justify-content: center; gap: 0.7rem; width: 100%; min-height: 56px;
+  background: var(--painel); border: 1.5px solid #c8d3e2; border-radius: var(--raio-pequeno);
+  font-weight: 700; color: var(--texto);
+}
+.entrar-google:hover { border-color: var(--marca-media); background: var(--marca-clara); }
+.entrar-trocar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 0.4rem;
+  margin: 0 -1.5rem -1.5rem; padding: 0.6rem 1.5rem 0.7rem;
+  border-top: 1px solid var(--linha); background: #f6f8fc; border-radius: 0 0 var(--raio) var(--raio);
+  color: var(--texto-suave);
+}
+.entrar-trocar button {
+  min-height: 48px; padding: 0 0.3rem; background: none; border: none;
+  color: var(--marca); font-weight: 800; text-decoration: underline; text-underline-offset: 3px;
+}
+.entrar-marca { color: #c7d6ee; font-weight: 800; letter-spacing: 0.02em; }
 
-.abas-entrar {
-  position: relative; display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 1.5rem;
-  background: var(--marca-clara); border-radius: var(--raio-pequeno); padding: 4px;
-}
-.abas-entrar button {
-  position: relative; z-index: 1; min-height: 52px; border: none; background: none; border-radius: var(--raio-pequeno);
-  font-weight: 700; color: var(--marca); transition: color 0.2s;
-}
-.abas-entrar button[aria-selected='true'] { color: #fff; }
-.abas-entrar-marcador {
-  position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
-  background: var(--marca); border-radius: var(--raio-pequeno);
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.abas-entrar-marcador.a-direita { transform: translateX(100%); }
+/* Campo com ícone dentro, à esquerda */
+.campo-com-icone { position: relative; display: block; }
+.campo-com-icone > svg { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--texto-suave); pointer-events: none; }
+.campo .campo-com-icone input { padding-left: 2.9rem; }
+.campo-com-icone:focus-within > svg { color: var(--marca); }
 
 .senha { position: relative; display: block; }
-.senha input { padding-right: 6.5rem; }
+.senha input { padding-right: 3.75rem; }
+/* Olho para ver a senha: alvo de 48px, ícone na cor da marca */
 .senha-mostrar {
-  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-  min-height: 44px; padding: 0 0.85rem; border: none; border-radius: var(--raio-pequeno);
-  background: var(--marca-clara); color: var(--marca); font-weight: 700; font-size: 0.9rem;
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: none; border-radius: var(--raio-pequeno);
+  background: none; color: var(--marca);
 }
+.senha-mostrar:hover { background: var(--marca-clara); }
+.senha-mostrar svg { width: 26px; height: 26px; }
 .campo-alerta { color: var(--alerta); font-weight: 700; }
 .requisito { display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s; }
 .requisito svg { width: 18px; height: 18px; opacity: 0.35; transition: opacity 0.2s; }
@@ -380,21 +406,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border: 3px solid rgba(255, 255, 255, 0.35); border-top-color: #fff; animation: girar 0.8s linear infinite;
 }
 
-.link-simples {
-  align-self: center; background: none; border: none; padding: 0.6rem 1rem; min-height: 48px;
-  color: var(--marca); font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
-}
 .ou { display: flex; align-items: center; gap: 0.75rem; color: var(--texto-suave); font-size: 0.9rem; }
 .ou::before, .ou::after { content: ''; flex: 1; border-top: 1px solid var(--linha); }
 
 .confira { display: flex; flex-direction: column; gap: 0.9rem; }
-.confira-icone {
-  display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--raio);
-  background: var(--marca); color: #fff; animation: pulsar 0.5s ease-out both;
-}
-.confira-icone svg { width: 34px; height: 34px; stroke-width: 2.5; }
 
-@keyframes surgir { from { opacity: 0; transform: translateY(-8px); } }
 @keyframes subir { from { opacity: 0; transform: translateY(40px); } }
 @keyframes aparecer { from { opacity: 0; transform: translateY(6px); } }
 @keyframes balancar { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
