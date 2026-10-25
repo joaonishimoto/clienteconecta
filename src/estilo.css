@@ -21,8 +21,8 @@
   --ok-claro: #e5f4ea;
   --festa: #8a2f6b;
   --festa-claro: #f9e9f3;
-  --raio: 16px;
-  --raio-pequeno: 12px;
+  --raio: 6px;
+  --raio-pequeno: 4px;
 
   font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 19px;
@@ -55,10 +55,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   backdrop-filter: blur(8px);
 }
 .cabecalho-marca { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; color: var(--tinta); }
-.cabecalho-marca img { border-radius: 9px; }
+.cabecalho-marca img { border-radius: var(--raio-pequeno); }
 .cabecalho-conta {
   display: flex; align-items: center; gap: 0.5rem; background: none; border: none; padding: 4px 4px 4px 0.75rem;
-  border-radius: 999px; font-weight: 700; color: var(--tinta);
+  border-radius: var(--raio); font-weight: 700; color: var(--tinta);
 }
 
 .conteudo { padding: 0.5rem 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -75,7 +75,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-size: 0.8rem; font-weight: 700; color: var(--texto-suave);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem;
 }
-.aba-icone { display: grid; place-items: center; width: 60px; height: 34px; border-radius: 999px; transition: background-color 0.15s; }
+.aba-icone { display: grid; place-items: center; width: 60px; height: 34px; border-radius: var(--raio-pequeno); transition: background-color 0.15s; }
 .aba-icone svg { width: 26px; height: 26px; }
 .abas button.ativa { color: var(--tinta); }
 .abas button.ativa .aba-icone { background: var(--tinta-clara); }
@@ -102,7 +102,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .painel { background: var(--painel); border-radius: var(--raio); border: 1px solid var(--linha); overflow: hidden; }
 .painel-vazio { padding: 1rem 1.1rem; color: var(--texto-suave); }
 
-.grupo-icone { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; }
+.grupo-icone { display: grid; place-items: center; width: 34px; height: 34px; border-radius: var(--raio-pequeno); }
 .grupo-icone svg { width: 20px; height: 20px; }
 .grupo-cobranca .grupo-icone { background: var(--alerta-claro); color: var(--alerta); }
 .grupo-aniversario .grupo-icone { background: var(--festa-claro); color: var(--festa); }
@@ -125,7 +125,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .linha-seta { flex: none; color: #9aa6b2; width: 22px; height: 22px; }
 
 .avatar {
-  flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+  flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: var(--raio);
   font-size: 0.95rem; font-weight: 800; letter-spacing: 0.02em;
 }
 .avatar-foto { object-fit: cover; }
@@ -137,7 +137,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cabecalho-conta .avatar { width: 42px; height: 42px; background: var(--tinta); color: #fff; }
 
 /* Selos de estado */
-.selo { display: inline-block; font-size: 0.82rem; font-weight: 700; padding: 0.15rem 0.6rem; border-radius: 999px; white-space: nowrap; }
+.selo { display: inline-block; font-size: 0.82rem; font-weight: 700; padding: 0.15rem 0.6rem; border-radius: var(--raio-pequeno); white-space: nowrap; }
 .selo-atrasado { background: var(--perigo-claro); color: var(--perigo); }
 .selo-hoje { background: var(--alerta-claro); color: var(--alerta); }
 .selo-festa { background: var(--festa-claro); color: var(--festa); }
@@ -170,11 +170,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .botao-leve { background: var(--tinta-clara); color: var(--tinta); }
 .botao-perigo { background: transparent; color: var(--perigo); border-color: #f0c7c3; }
 .botao-pequeno {
-  background: var(--tinta-clara); color: var(--tinta); border: none; border-radius: 10px;
+  background: var(--tinta-clara); color: var(--tinta); border: none; border-radius: var(--raio-pequeno);
   font-weight: 700; font-size: 0.9rem; padding: 0.5rem 0.9rem; min-height: 44px;
 }
 .botao-redondo {
-  flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%;
+  flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--raio);
   border: none; background: var(--ok-claro); color: var(--whatsapp);
 }
 .botao-redondo svg { width: 26px; height: 26px; }
@@ -233,14 +233,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
   position: relative; background: var(--painel); border: 2px solid var(--linha); border-radius: var(--raio);
   padding: 0.6rem; display: flex; flex-direction: column; gap: 0.35rem; text-align: left; min-height: 120px;
 }
-.produto-botao img, .produto-botao .produto-sem-foto { width: 100%; aspect-ratio: 4 / 3; border-radius: 10px; object-fit: cover; }
+.produto-botao img, .produto-botao .produto-sem-foto { width: 100%; aspect-ratio: 4 / 3; border-radius: var(--raio-pequeno); object-fit: cover; }
 .produto-escolhido { border-color: var(--tinta); background: var(--tinta-clara); }
 .produto-escolhido .produto-sem-foto { background: var(--painel); }
 .produto-nome { font-weight: 700; font-size: 0.95rem; line-height: 1.25; }
 .produto-preco { font-weight: 800; color: var(--tinta); }
 .produto-qtd {
   position: absolute; top: -10px; right: -8px; min-width: 34px; height: 34px; padding: 0 0.4rem;
-  display: grid; place-items: center; border-radius: 999px; background: var(--tinta); color: #fff; font-weight: 800;
+  display: grid; place-items: center; border-radius: var(--raio-pequeno); background: var(--tinta); color: #fff; font-weight: 800;
   border: 3px solid var(--fundo);
 }
 .produto-sem-foto {
@@ -261,7 +261,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .quantidade { display: flex; align-items: center; gap: 0.5rem; }
 .quantidade strong { min-width: 1.6rem; text-align: center; font-size: 1.1rem; }
 .quantidade button {
-  display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center; width: 46px; height: 46px; border-radius: var(--raio);
   border: 1.5px solid #c6d2df; background: var(--painel); color: var(--tinta);
 }
 .total {
@@ -271,7 +271,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .total strong { font-size: 1.45rem; color: var(--tinta-forte); }
 
 .concluida { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.9rem; padding-top: 2rem; }
-.concluida-icone { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: var(--ok-claro); color: var(--ok); }
+.concluida-icone { display: grid; place-items: center; width: 84px; height: 84px; border-radius: var(--raio); background: var(--ok-claro); color: var(--ok); }
 .concluida-icone svg { width: 44px; height: 44px; stroke-width: 2.5; }
 .concluida .topo-sub { margin-bottom: 0.75rem; }
 
@@ -279,7 +279,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .produto-linha { display: flex; align-items: center; gap: 0.5rem; padding-right: 1rem; border-top: 1px solid var(--linha); }
 .painel > .produto-linha:first-child { border-top: none; }
 .produto-abrir { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.9rem; padding: 0.8rem 0 0.8rem 1rem; background: none; border: none; text-align: left; }
-.produto-miniatura { flex: none; width: 64px; height: 64px; border-radius: 12px; object-fit: cover; }
+.produto-miniatura { flex: none; width: 64px; height: 64px; border-radius: var(--raio-pequeno); object-fit: cover; }
 
 .foto-campo { display: flex; flex-direction: column; gap: 0.75rem; align-items: center; cursor: pointer; }
 .foto-campo img, .foto-vazia { width: 168px; height: 168px; border-radius: var(--raio); object-fit: cover; }
@@ -299,16 +299,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Entrar: faixa azul com a marca e uma folha branca que sobe por cima dela ao abrir */
 .entrar { min-height: 100vh; display: flex; flex-direction: column; background: var(--tinta); }
 .entrar-faixa {
-  padding: calc(2.25rem + env(safe-area-inset-top)) 1.5rem 3.25rem;
+  padding: calc(2.25rem + env(safe-area-inset-top)) 1.5rem 2rem;
   color: #fff; display: flex; flex-direction: column; gap: 0.35rem;
   max-width: 480px; width: 100%; margin: 0 auto;
   animation: surgir 0.5s ease-out both;
 }
-.entrar-faixa img { border-radius: 14px; margin-bottom: 0.6rem; }
+.entrar-faixa img { border-radius: var(--raio-pequeno); margin-bottom: 0.6rem; }
 .entrar-produto { font-weight: 800; font-size: 1.35rem; }
 .entrar-promessa { color: #c9d6e6; }
 .entrar-folha {
-  flex: 1; background: var(--fundo); border-radius: 28px 28px 0 0; margin-top: -1.5rem;
+  flex: 1; background: var(--fundo); border-radius: 0;
   padding: 1.5rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
   animation: subir 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both;
 }
@@ -317,16 +317,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .abas-entrar {
   position: relative; display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 1.5rem;
-  background: #e3e8ee; border-radius: 14px; padding: 4px;
+  background: #e3e8ee; border-radius: var(--raio-pequeno); padding: 4px;
 }
 .abas-entrar button {
-  position: relative; z-index: 1; min-height: 52px; border: none; background: none; border-radius: 11px;
+  position: relative; z-index: 1; min-height: 52px; border: none; background: none; border-radius: var(--raio-pequeno);
   font-weight: 700; color: var(--texto-suave); transition: color 0.2s;
 }
 .abas-entrar button[aria-selected='true'] { color: var(--tinta-forte); }
 .abas-entrar-marcador {
   position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
-  background: var(--painel); border-radius: 11px; box-shadow: 0 1px 3px rgba(20, 42, 70, 0.14);
+  background: var(--painel); border-radius: var(--raio-pequeno); box-shadow: 0 1px 3px rgba(20, 42, 70, 0.14);
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .abas-entrar-marcador.a-direita { transform: translateX(100%); }
@@ -335,7 +335,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .senha input { padding-right: 6.5rem; }
 .senha-mostrar {
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-  min-height: 44px; padding: 0 0.85rem; border: none; border-radius: 9px;
+  min-height: 44px; padding: 0 0.85rem; border: none; border-radius: var(--raio-pequeno);
   background: var(--tinta-clara); color: var(--tinta); font-weight: 700; font-size: 0.9rem;
 }
 .campo-alerta { color: var(--alerta); font-weight: 700; }
@@ -359,7 +359,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .confira { display: flex; flex-direction: column; gap: 0.9rem; }
 .confira-icone {
-  display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%;
+  display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--raio);
   background: var(--ok-claro); color: var(--ok); animation: pulsar 0.5s ease-out both;
 }
 .confira-icone svg { width: 34px; height: 34px; stroke-width: 2.5; }
