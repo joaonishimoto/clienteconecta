@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type R
 import { supabase } from '../lib/supabase'
 import { mensagemDeErro } from '../lib/erros'
 import { Aviso, Botao, Campo } from '../componentes'
-import { IconeCadeado, IconeCheck, IconeEmail, IconePessoa, IconeVoltar } from '../icones'
+import { IconeCadeado, IconeCheck, IconeEmail, IconeOlho, IconeOlhoFechado, IconePessoa, IconeVoltar } from '../icones'
 
 type Modo = 'entrar' | 'cadastrar' | 'esqueci' | 'confira-email' | 'link-enviado'
 
@@ -168,6 +168,7 @@ export function Entrar() {
                   autoComplete="name"
                   autoCapitalize="words"
                   enterKeyHint="next"
+                  placeholder="Ex.: Maria Aparecida"
                   required
                 />
               )}
@@ -271,6 +272,7 @@ function CampoSenha({ valor, mudar, nova }: { valor: string; mudar: (s: string) 
           onKeyUp={conferirCaps}
           onKeyDown={conferirCaps}
           autoComplete={nova ? 'new-password' : 'current-password'}
+          placeholder={nova ? 'Sua nova senha' : 'Sua senha'}
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
@@ -281,9 +283,10 @@ function CampoSenha({ valor, mudar, nova }: { valor: string; mudar: (s: string) 
           type="button"
           className="senha-mostrar"
           onClick={() => setVisivel((v) => !v)}
-          aria-pressed={visivel}
+          aria-label={visivel ? 'Esconder senha' : 'Mostrar senha'}
+          title={visivel ? 'Esconder senha' : 'Mostrar senha'}
         >
-          {visivel ? 'Esconder' : 'Mostrar'}
+          {visivel ? <IconeOlhoFechado /> : <IconeOlho />}
         </button>
       </span>
       {maiusculas && <span className="campo-dica campo-alerta">A tecla de letras maiúsculas está ligada.</span>}

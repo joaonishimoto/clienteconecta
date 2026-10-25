@@ -385,12 +385,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .campo-com-icone:focus-within > svg { color: var(--marca); }
 
 .senha { position: relative; display: block; }
-.senha input { padding-right: 6.5rem; }
+.senha input { padding-right: 3.75rem; }
+/* Olho para ver a senha: alvo de 48px, ícone na cor da marca */
 .senha-mostrar {
-  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-  min-height: 44px; padding: 0 0.85rem; border: none; border-radius: var(--raio-pequeno);
-  background: var(--marca-clara); color: var(--marca); font-weight: 700; font-size: 0.9rem;
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: none; border-radius: var(--raio-pequeno);
+  background: none; color: var(--marca);
 }
+.senha-mostrar:hover { background: var(--marca-clara); }
+.senha-mostrar svg { width: 26px; height: 26px; }
 .campo-alerta { color: var(--alerta); font-weight: 700; }
 .requisito { display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s; }
 .requisito svg { width: 18px; height: 18px; opacity: 0.35; transition: opacity 0.2s; }
