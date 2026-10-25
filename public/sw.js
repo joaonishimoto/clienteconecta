@@ -1,6 +1,6 @@
 // Service worker mínimo: deixa o app instalável e abre a tela inicial mesmo com internet fraca.
 // Os dados sempre vêm do Supabase, então só guardamos os arquivos do próprio app.
-const CACHE = 'clienteconecta-v1'
+const CACHE = 'clienteconecta-v2'
 
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (e) => {
