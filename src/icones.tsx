@@ -25,6 +25,9 @@ export const IconeCatalogo = (p: P) => (
   <Base {...p}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></Base>
 )
 export const IconeVoltar = (p: P) => <Base {...p}><path d="m15 5-7 7 7 7" /></Base>
+export const IconeRecolher = (p: P) => (
+  <Base {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M16 9.5 13.5 12l2.5 2.5" /></Base>
+)
 export const IconeSeta = (p: P) => <Base {...p}><path d="m9 5 7 7-7 7" /></Base>
 export const IconeMais = (p: P) => <Base {...p}><path d="M12 5v14M5 12h14" /></Base>
 export const IconeMenos = (p: P) => <Base {...p}><path d="M5 12h14" /></Base>

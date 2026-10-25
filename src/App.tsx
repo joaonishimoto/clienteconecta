@@ -9,7 +9,8 @@ import { Vender } from './pages/Vender'
 import { Catalogo } from './pages/Catalogo'
 import { Conta } from './pages/Conta'
 import { Avatar, Aviso } from './componentes'
-import { IconeCatalogo, IconeClientes, IconeHoje, IconeVender } from './icones'
+import { primeiroNome } from './lib/formato'
+import { IconeCatalogo, IconeClientes, IconeHoje, IconeRecolher, IconeVender } from './icones'
 
 export type Aba = 'hoje' | 'clientes' | 'vender' | 'catalogo'
 
@@ -52,6 +53,15 @@ function Principal({ userId }: { userId: string }) {
   const [vendaPara, setVendaPara] = useState<string | null>(null)
   // Muda a cada toque numa aba, para cada tela voltar ao começo.
   const [toque, setToque] = useState(0)
+  // No computador o menu fica ao lado; ela pode recolher e o app lembra da escolha.
+  const [recolhido, setRecolhido] = useState(() => lerPreferencia('menu-recolhido'))
+
+  const alternarMenu = () => {
+    setRecolhido((r) => {
+      guardarPreferencia('menu-recolhido', !r)
+      return !r
+    })
+  }
 
   const irPara = (a: Aba) => {
     setAba(a)
@@ -66,18 +76,60 @@ function Principal({ userId }: { userId: string }) {
     setVendaPara(clienteId)
   }
 
+  const empresa = perfil?.empresa || 'ClienteConecta'
+
   return (
-    <div className="app">
+    <div className={`app ${recolhido ? 'app-recolhido' : ''}`}>
       <header className="cabecalho">
         <span className="cabecalho-marca">
           <img src="/icone.svg" alt="" width={32} height={32} />
-          {perfil?.empresa || 'ClienteConecta'}
+          {empresa}
         </span>
         <button type="button" className="cabecalho-conta" onClick={() => setContaAberta(true)}>
           Conta
           <Avatar nome={perfil?.nome || '?'} />
         </button>
       </header>
+
+      {/* Menu lateral, só em telas largas. Recolhido, mostra o ícone com o nome pequeno embaixo. */}
+      <aside className="lateral" aria-label="Menu">
+        <span className="lateral-marca" title={recolhido ? empresa : undefined}>
+          <img src="/icone.svg" alt="" width={40} height={40} />
+          <span className="lateral-nome">{empresa}</span>
+        </span>
+        <nav className="lateral-abas">
+          {ABAS.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              className={!contaAberta && aba === a.id ? 'ativa' : ''}
+              aria-current={!contaAberta && aba === a.id ? 'page' : undefined}
+              onClick={() => irPara(a.id)}
+            >
+              <a.Icone />
+              <span>{a.nome}</span>
+            </button>
+          ))}
+        </nav>
+        <button
+          type="button"
+          className={`lateral-conta ${contaAberta ? 'ativa' : ''}`}
+          aria-current={contaAberta ? 'page' : undefined}
+          aria-label="Minha conta"
+          title={recolhido ? 'Minha conta' : undefined}
+          onClick={() => setContaAberta(true)}
+        >
+          <Avatar nome={perfil?.nome || '?'} />
+          <span className="lateral-conta-texto">
+            <strong>{perfil?.nome ? primeiroNome(perfil.nome) : 'Minha conta'}</strong>
+            <span>Minha conta</span>
+          </span>
+        </button>
+        <button type="button" className="lateral-recolher" onClick={alternarMenu} aria-expanded={!recolhido}>
+          <IconeRecolher />
+          <span>{recolhido ? 'Abrir menu' : 'Recolher menu'}</span>
+        </button>
+      </aside>
 
       <main className="conteudo">
         {erro && <Aviso>{erro}</Aviso>}
@@ -114,4 +166,20 @@ function Principal({ userId }: { userId: string }) {
       </nav>
     </div>
   )
+}
+
+function lerPreferencia(chave: string) {
+  try {
+    return localStorage.getItem(chave) === '1'
+  } catch {
+    return false
+  }
+}
+
+function guardarPreferencia(chave: string, valor: boolean) {
+  try {
+    localStorage.setItem(chave, valor ? '1' : '0')
+  } catch {
+    // Sem armazenamento (aba anônima): a escolha vale só até fechar.
+  }
 }
