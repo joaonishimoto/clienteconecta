@@ -102,10 +102,8 @@ export function Avatar({ nome, foto }: { nome: string; foto?: string | null }) {
   if (foto) return <img className="avatar avatar-foto" src={foto} alt="" />
   const partes = nome.trim().split(/\s+/)
   const iniciais = ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase()
-  // Cor estável por nome, para cada cliente ser reconhecida de longe.
-  const tom = [...nome].reduce((s, c) => s + c.charCodeAt(0), 0) % 5
   return (
-    <span className={`avatar avatar-tom${tom}`} aria-hidden>
+    <span className="avatar" aria-hidden>
       {iniciais || '?'}
     </span>
   )
