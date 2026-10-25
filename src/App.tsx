@@ -8,16 +8,17 @@ import { Clientes } from './pages/Clientes'
 import { Vender } from './pages/Vender'
 import { Catalogo } from './pages/Catalogo'
 import { Conta } from './pages/Conta'
-import { Aviso } from './componentes'
+import { Avatar, Aviso } from './componentes'
+import { IconeCatalogo, IconeClientes, IconeHoje, IconeVender } from './icones'
 
 export type Aba = 'hoje' | 'clientes' | 'vender' | 'catalogo'
 
-const ABAS: { id: Aba; icone: string; nome: string }[] = [
-  { id: 'hoje', icone: '🔔', nome: 'Hoje' },
-  { id: 'clientes', icone: '👥', nome: 'Clientes' },
-  { id: 'vender', icone: '🛒', nome: 'Vender' },
-  { id: 'catalogo', icone: '📦', nome: 'Catálogo' },
-]
+const ABAS = [
+  { id: 'hoje', Icone: IconeHoje, nome: 'Hoje' },
+  { id: 'clientes', Icone: IconeClientes, nome: 'Clientes' },
+  { id: 'vender', Icone: IconeVender, nome: 'Vender' },
+  { id: 'catalogo', Icone: IconeCatalogo, nome: 'Catálogo' },
+] as const
 
 export default function App() {
   const [sessao, setSessao] = useState<Session | null | undefined>(undefined)
@@ -68,19 +69,20 @@ function Principal({ userId }: { userId: string }) {
   return (
     <div className="app">
       <header className="cabecalho">
-        <div>
-          <strong>{perfil?.empresa || 'ClienteConecta'}</strong>
-          {perfil?.nome && <span>{perfil.nome}</span>}
-        </div>
-        <button type="button" className="botao-conta" onClick={() => setContaAberta(true)}>
-          ⚙️ Minha conta
+        <span className="cabecalho-marca">
+          <img src="/icone.svg" alt="" width={32} height={32} />
+          {perfil?.empresa || 'ClienteConecta'}
+        </span>
+        <button type="button" className="cabecalho-conta" onClick={() => setContaAberta(true)}>
+          Conta
+          <Avatar nome={perfil?.nome || '?'} />
         </button>
       </header>
 
       <main className="conteudo">
         {erro && <Aviso>{erro}</Aviso>}
         {carregando ? (
-          <p className="carregando">Carregando…</p>
+          <p className="carregando">Carregando seus dados…</p>
         ) : contaAberta ? (
           <Conta userId={userId} fechar={() => setContaAberta(false)} />
         ) : aba === 'hoje' ? (
@@ -103,8 +105,8 @@ function Principal({ userId }: { userId: string }) {
             aria-current={!contaAberta && aba === a.id ? 'page' : undefined}
             onClick={() => irPara(a.id)}
           >
-            <span className="aba-icone" aria-hidden>
-              {a.icone}
+            <span className="aba-icone">
+              <a.Icone />
             </span>
             {a.nome}
           </button>

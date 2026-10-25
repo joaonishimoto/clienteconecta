@@ -2,9 +2,10 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useDados } from '../lib/dados'
 import { montarLembretes, type Lembrete } from '../lib/lembretes'
-import { dataBR, diaMes, dinheiro, hojeISO, primeiroNome } from '../lib/formato'
+import { diaMes, dinheiro, hojeISO, primeiroNome } from '../lib/formato'
 import { abrirWhatsapp } from '../lib/whatsapp'
-import { Aviso, Botao, Topo, Vazio } from '../componentes'
+import { Avatar, Aviso, Botao, Vazio } from '../componentes'
+import { IconeBolo, IconeCheck, IconeMoeda, IconeRepor, IconeWhatsapp } from '../icones'
 
 export function Hoje() {
   const { perfil, clientes, vendas, parcelas, itens, recarregar } = useDados()
@@ -22,88 +23,154 @@ export function Hoje() {
   async function alterar(tabela: 'parcelas' | 'venda_itens', id: string, mudanca: Record<string, unknown>) {
     setErro('')
     const { error } = await supabase.from(tabela).update(mudanca).eq('id', id)
-    if (error) setErro('Não consegui salvar. Confira a internet e tente de novo.')
+    if (error) setErro('Não foi possível salvar. Confira a internet e tente de novo.')
     await recarregar()
   }
 
-  const hora = new Date().getHours()
+  const agora = new Date()
+  const hora = agora.getHours()
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
   const nome = perfil?.nome ? `, ${primeiroNome(perfil.nome)}` : ''
+  const data = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const pessoas = new Set(lembretes.map((l) => l.cliente.id)).size
 
   return (
     <>
-      <Topo titulo={`${saudacao}${nome}!`} />
-      <p className="subtitulo">Hoje é {dataBR(hoje)}. Veja quem chamar:</p>
+      <header className="hoje-topo">
+        <p className="hoje-saudacao">
+          {saudacao}
+          {nome}
+        </p>
+        <h1 className="hoje-data">{data.charAt(0).toUpperCase() + data.slice(1)}</h1>
+        {pessoas > 0 && (
+          <p className="hoje-resumo">
+            {pessoas === 1 ? 'Uma cliente espera sua mensagem hoje.' : `${pessoas} clientes esperam sua mensagem hoje.`}
+          </p>
+        )}
+      </header>
       {erro && <Aviso>{erro}</Aviso>}
 
       {lembretes.length === 0 && (
-        <Vazio>
-          Tudo em dia! 🎉
-          <br />
-          Nenhuma cobrança, aniversário ou recompra para hoje.
-        </Vazio>
+        <Vazio titulo="Tudo em dia">Nenhuma cobrança, aniversário ou recompra para hoje.</Vazio>
       )}
 
-      {cobrancas.length > 0 && <h2>💰 Cobranças</h2>}
-      {cobrancas.map((l) => l.tipo === 'parcela' && (
-        <Item
-          key={l.parcela.id}
-          lembrete={l}
-          acao={
-            <Botao variante="secundario" onClick={() => alterar('parcelas', l.parcela.id, { pago_em: hoje })}>
-              ✓ Já recebi
-            </Botao>
-          }
-        >
-          <p>
-            Parcela {l.parcela.numero} de {l.parcela.de}: <strong>{dinheiro(l.parcela.valor)}</strong>
-          </p>
-          <p className={l.atrasada ? 'atrasada' : ''}>
-            {l.atrasada
-              ? `Atrasada desde ${diaMes(l.parcela.vencimento)}`
-              : l.parcela.vencimento === hoje
-                ? 'Vence hoje'
-                : `Vence ${diaMes(l.parcela.vencimento)}`}
-          </p>
-        </Item>
-      ))}
+      {cobrancas.length > 0 && (
+        <Grupo icone={<IconeMoeda />} titulo="Cobranças" tom="cobranca">
+          {cobrancas.map(
+            (l) =>
+              l.tipo === 'parcela' && (
+                <Tarefa
+                  key={l.parcela.id}
+                  lembrete={l}
+                  detalhe={
+                    <>
+                      Parcela {l.parcela.numero} de {l.parcela.de}, <strong>{dinheiro(l.parcela.valor)}</strong>
+                      <span className={l.atrasada ? 'selo selo-atrasado' : 'selo selo-hoje'}>
+                        {l.atrasada
+                          ? `Atrasada desde ${diaMes(l.parcela.vencimento)}`
+                          : l.parcela.vencimento === hoje
+                            ? 'Vence hoje'
+                            : `Vence ${diaMes(l.parcela.vencimento)}`}
+                      </span>
+                    </>
+                  }
+                  acao={
+                    <Botao variante="leve" icone={<IconeCheck />} onClick={() => alterar('parcelas', l.parcela.id, { pago_em: hoje })}>
+                      Recebi
+                    </Botao>
+                  }
+                />
+              ),
+          )}
+        </Grupo>
+      )}
 
-      {aniversarios.length > 0 && <h2>🎂 Aniversários</h2>}
-      {aniversarios.map((l) => l.tipo === 'aniversario' && (
-        <Item key={l.cliente.id} lembrete={l}>
-          <p>{l.emDias === 0 ? <strong>É hoje!</strong> : l.emDias === 1 ? 'Amanhã' : `Daqui a ${l.emDias} dias`}</p>
-        </Item>
-      ))}
+      {aniversarios.length > 0 && (
+        <Grupo icone={<IconeBolo />} titulo="Aniversários" tom="aniversario">
+          {aniversarios.map(
+            (l) =>
+              l.tipo === 'aniversario' && (
+                <Tarefa
+                  key={l.cliente.id}
+                  lembrete={l}
+                  detalhe={
+                    l.emDias === 0 ? (
+                      <span className="selo selo-festa">Faz aniversário hoje</span>
+                    ) : l.emDias === 1 ? (
+                      'Faz aniversário amanhã'
+                    ) : (
+                      `Faz aniversário daqui a ${l.emDias} dias`
+                    )
+                  }
+                />
+              ),
+          )}
+        </Grupo>
+      )}
 
-      {recompras.length > 0 && <h2>🔁 Hora de repor</h2>}
-      {recompras.map((l) => l.tipo === 'recompra' && (
-        <Item
-          key={l.item.id}
-          lembrete={l}
-          acao={
-            <Botao variante="secundario" onClick={() => alterar('venda_itens', l.item.id, { recompra_avisada: true })}>
-              ✓ Já avisei
-            </Botao>
-          }
-        >
-          <p>
-            Levou <strong>{l.item.nome}</strong>
-          </p>
-        </Item>
-      ))}
+      {recompras.length > 0 && (
+        <Grupo icone={<IconeRepor />} titulo="Hora de repor" tom="repor">
+          {recompras.map(
+            (l) =>
+              l.tipo === 'recompra' && (
+                <Tarefa
+                  key={l.item.id}
+                  lembrete={l}
+                  detalhe={
+                    <>
+                      Comprou <strong>{l.item.nome}</strong>
+                    </>
+                  }
+                  acao={
+                    <Botao
+                      variante="leve"
+                      icone={<IconeCheck />}
+                      onClick={() => alterar('venda_itens', l.item.id, { recompra_avisada: true })}
+                    >
+                      Já avisei
+                    </Botao>
+                  }
+                />
+              ),
+          )}
+        </Grupo>
+      )}
     </>
   )
 }
 
-function Item({ lembrete, acao, children }: { lembrete: Lembrete; acao?: ReactNode; children: ReactNode }) {
+function Grupo({ icone, titulo, tom, children }: { icone: ReactNode; titulo: string; tom: string; children: ReactNode }) {
   return (
-    <div className="cartao">
-      <h3>{lembrete.cliente.nome}</h3>
-      {children}
-      <Botao variante="whatsapp" onClick={() => abrirWhatsapp(lembrete.cliente.whatsapp, lembrete.mensagem)}>
-        Chamar no WhatsApp
-      </Botao>
-      {acao}
+    <section className={`secao grupo grupo-${tom}`}>
+      <h2>
+        <span className="grupo-icone">{icone}</span>
+        {titulo}
+      </h2>
+      <div className="painel">{children}</div>
+    </section>
+  )
+}
+
+function Tarefa({ lembrete, detalhe, acao }: { lembrete: Lembrete; detalhe: ReactNode; acao?: ReactNode }) {
+  return (
+    <div className="tarefa">
+      <div className="tarefa-quem">
+        <Avatar nome={lembrete.cliente.nome} />
+        <div>
+          <p className="tarefa-nome">{lembrete.cliente.nome}</p>
+          <p className="tarefa-detalhe">{detalhe}</p>
+        </div>
+      </div>
+      <div className="tarefa-acoes">
+        <Botao
+          variante="whatsapp"
+          icone={<IconeWhatsapp />}
+          onClick={() => abrirWhatsapp(lembrete.cliente.whatsapp, lembrete.mensagem)}
+        >
+          WhatsApp
+        </Botao>
+        {acao}
+      </div>
     </div>
   )
 }

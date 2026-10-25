@@ -4,6 +4,7 @@ import { useDados } from '../lib/dados'
 import { baixar, clientesParaCsv, lerArquivo, lerClientes, lerProdutos, produtosParaCsv } from '../lib/planilha'
 import { hojeISO } from '../lib/formato'
 import { Aviso, Botao, Campo, Topo } from '../componentes'
+import { IconeBaixar, IconeSair, IconeSubir } from '../icones'
 
 export function Conta({ userId, fechar }: { userId: string; fechar: () => void }) {
   const { perfil, clientes, produtos, recarregar } = useDados()
@@ -14,7 +15,7 @@ export function Conta({ userId, fechar }: { userId: string; fechar: () => void }
   async function salvar(e: FormEvent) {
     e.preventDefault()
     const { error } = await supabase.from('perfis').upsert({ id: userId, nome: nome.trim(), empresa: empresa.trim() })
-    setAviso(error ? { tipo: 'erro', texto: 'Não consegui salvar.' } : { tipo: 'ok', texto: 'Dados salvos!' })
+    setAviso(error ? { tipo: 'erro', texto: 'Não foi possível salvar.' } : { tipo: 'ok', texto: 'Dados salvos!' })
     await recarregar()
   }
 
@@ -41,7 +42,7 @@ export function Conta({ userId, fechar }: { userId: string; fechar: () => void }
         texto: `${novas.length} ${tipo} importados.` + (pulados ? ` ${pulados} já existiam e foram pulados.` : ''),
       })
     } catch {
-      setAviso({ tipo: 'erro', texto: 'Não consegui ler essa planilha. Use um arquivo .xlsx ou .csv.' })
+      setAviso({ tipo: 'erro', texto: 'Não foi possível ler essa planilha. Use um arquivo .xlsx ou .csv.' })
     }
   }
 
@@ -58,28 +59,31 @@ export function Conta({ userId, fechar }: { userId: string; fechar: () => void }
           placeholder="Ex.: Timol"
           dica="Aparece no topo do app."
         />
-        <Botao type="submit">Salvar</Botao>
+        <Botao type="submit">Salvar dados</Botao>
       </form>
 
       {aviso && <Aviso tipo={aviso.tipo}>{aviso.texto}</Aviso>}
 
-      <h2>Planilhas</h2>
-      <p className="subtitulo">Traga sua lista do Excel ou guarde uma cópia dos seus dados.</p>
-      <Botao variante="secundario" onClick={() => baixar(`clientes-${hojeISO()}.csv`, clientesParaCsv(clientes))}>
-        ⬇️ Baixar clientes
-      </Botao>
-      <Botao variante="secundario" onClick={() => baixar(`produtos-${hojeISO()}.csv`, produtosParaCsv(produtos))}>
-        ⬇️ Baixar produtos
-      </Botao>
-      <ArquivoBotao rotulo="⬆️ Trazer clientes de planilha" escolher={(f) => importar('clientes', f)} />
-      <ArquivoBotao rotulo="⬆️ Trazer produtos de planilha" escolher={(f) => importar('produtos', f)} />
-      <p className="campo-dica">
-        Colunas de clientes: nome, whatsapp, aniversario, observacao. Colunas de produtos: nome, preco, recompra_dias,
-        descricao. Dica: baixe a planilha primeiro e use como modelo.
-      </p>
+      <section className="secao">
+        <h2>Planilhas</h2>
+        <p className="secao-texto">Traga sua lista do Excel ou guarde uma cópia dos seus dados.</p>
+        <div className="painel painel-acoes">
+          <ArquivoBotao rotulo="Trazer clientes de planilha" escolher={(f) => importar('clientes', f)} />
+          <ArquivoBotao rotulo="Trazer produtos de planilha" escolher={(f) => importar('produtos', f)} />
+          <button type="button" className="painel-acao" onClick={() => baixar(`clientes-${hojeISO()}.csv`, clientesParaCsv(clientes))}>
+            <IconeBaixar /> Baixar clientes
+          </button>
+          <button type="button" className="painel-acao" onClick={() => baixar(`produtos-${hojeISO()}.csv`, produtosParaCsv(produtos))}>
+            <IconeBaixar /> Baixar produtos
+          </button>
+        </div>
+        <p className="campo-dica">
+          A planilha precisa de uma coluna “nome”. Para clientes também valem whatsapp, aniversario e observacao; para
+          produtos, preco, recompra_dias e descricao. O jeito mais fácil é baixar uma planilha e usar como modelo.
+        </p>
+      </section>
 
-      <h2>Sair</h2>
-      <Botao variante="perigo" onClick={() => supabase.auth.signOut()}>
+      <Botao variante="perigo" icone={<IconeSair />} onClick={() => supabase.auth.signOut()}>
         Sair do app
       </Botao>
     </>
@@ -88,8 +92,8 @@ export function Conta({ userId, fechar }: { userId: string; fechar: () => void }
 
 function ArquivoBotao({ rotulo, escolher }: { rotulo: string; escolher: (f: File | undefined) => void }) {
   return (
-    <label className="botao botao-secundario">
-      {rotulo}
+    <label className="painel-acao">
+      <IconeSubir /> {rotulo}
       <input
         type="file"
         accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
