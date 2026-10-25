@@ -4,8 +4,8 @@ import { useDados } from '../lib/dados'
 import { montarLembretes, type Lembrete } from '../lib/lembretes'
 import { diaMes, dinheiro, hojeISO, primeiroNome } from '../lib/formato'
 import { abrirWhatsapp } from '../lib/whatsapp'
-import { Avatar, Aviso, Botao, Vazio } from '../componentes'
-import { IconeCheck, IconeWhatsapp } from '../icones'
+import { Avatar, Aviso, Botao, BotaoWhatsapp, Vazio } from '../componentes'
+import { IconeBolo, IconeCheck, IconeMoeda, IconeRepor } from '../icones'
 
 export function Hoje() {
   const { perfil, clientes, vendas, parcelas, itens, recarregar } = useDados()
@@ -31,33 +31,28 @@ export function Hoje() {
   const hora = agora.getHours()
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
   const nome = perfil?.nome ? `, ${primeiroNome(perfil.nome)}` : ''
-  const pessoas = new Set(lembretes.map((l) => l.cliente.id)).size
-  const dataCompleta = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-  const mes = agora.toLocaleDateString('pt-BR', { month: 'long' })
-  const semana = agora.toLocaleDateString('pt-BR', { weekday: 'long' }).replace('-feira', '')
+  const data = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
     <>
-      {/* A folhinha de parede: o dia de hoje é o título da tela. */}
+      {/* Faixa azul da marca com o dia e o resumo do que espera por ela hoje. */}
       <header className="hoje-topo">
-        <h1 className="folhinha" aria-label={dataCompleta}>
-          <span className="folhinha-mes" aria-hidden>{mes}</span>
-          <span className="folhinha-dia" aria-hidden>{agora.getDate()}</span>
-          <span className="folhinha-semana" aria-hidden>{semana}</span>
-        </h1>
-        <div className="hoje-texto">
-          <p className="hoje-saudacao">
-            {saudacao}
-            {nome}.
-          </p>
-          <p className="hoje-resumo">
-            {pessoas === 0
-              ? 'Nenhuma mensagem para mandar hoje.'
-              : pessoas === 1
-                ? 'Uma cliente espera sua mensagem hoje.'
-                : `${pessoas} clientes esperam sua mensagem hoje.`}
-          </p>
-        </div>
+        <p className="hoje-saudacao">
+          {saudacao}
+          {nome}
+        </p>
+        <h1 className="hoje-data">{data.charAt(0).toUpperCase() + data.slice(1)}</h1>
+        <ul className="hoje-contas" aria-label="Resumo de hoje">
+          <li>
+            <strong>{cobrancas.length}</strong> {cobrancas.length === 1 ? 'cobrança' : 'cobranças'}
+          </li>
+          <li>
+            <strong>{aniversarios.length}</strong> {aniversarios.length === 1 ? 'aniversário' : 'aniversários'}
+          </li>
+          <li>
+            <strong>{recompras.length}</strong> para repor
+          </li>
+        </ul>
       </header>
       {erro && <Aviso>{erro}</Aviso>}
 
@@ -66,7 +61,7 @@ export function Hoje() {
       )}
 
       {cobrancas.length > 0 && (
-        <Grupo titulo="Cobranças" tom="cobranca" total={cobrancas.length}>
+        <Grupo icone={<IconeMoeda />} titulo="Cobranças" tom="cobranca">
           {cobrancas.map(
             (l) =>
               l.tipo === 'parcela' && (
@@ -86,7 +81,7 @@ export function Hoje() {
                     </>
                   }
                   acao={
-                    <Botao variante="leve" icone={<IconeCheck />} onClick={() => alterar('parcelas', l.parcela.id, { pago_em: hoje })}>
+                    <Botao variante="secundario" icone={<IconeCheck />} onClick={() => alterar('parcelas', l.parcela.id, { pago_em: hoje })}>
                       Recebi
                     </Botao>
                   }
@@ -97,7 +92,7 @@ export function Hoje() {
       )}
 
       {aniversarios.length > 0 && (
-        <Grupo titulo="Aniversários" tom="aniversario" total={aniversarios.length}>
+        <Grupo icone={<IconeBolo />} titulo="Aniversários" tom="aniversario">
           {aniversarios.map(
             (l) =>
               l.tipo === 'aniversario' && (
@@ -120,7 +115,7 @@ export function Hoje() {
       )}
 
       {recompras.length > 0 && (
-        <Grupo titulo="Hora de repor" tom="repor" total={recompras.length}>
+        <Grupo icone={<IconeRepor />} titulo="Hora de repor" tom="repor">
           {recompras.map(
             (l) =>
               l.tipo === 'recompra' && (
@@ -134,7 +129,7 @@ export function Hoje() {
                   }
                   acao={
                     <Botao
-                      variante="leve"
+                      variante="secundario"
                       icone={<IconeCheck />}
                       onClick={() => alterar('venda_itens', l.item.id, { recompra_avisada: true })}
                     >
@@ -150,38 +145,33 @@ export function Hoje() {
   )
 }
 
-function Grupo({ titulo, tom, total, children }: { titulo: string; tom: string; total: number; children: ReactNode }) {
+function Grupo({ icone, titulo, tom, children }: { icone: ReactNode; titulo: string; tom: string; children: ReactNode }) {
   return (
     <section className={`secao grupo grupo-${tom}`}>
       <h2>
+        <span className="grupo-icone">{icone}</span>
         {titulo}
-        <span className="grupo-total">{total}</span>
       </h2>
-      <div className="painel">{children}</div>
+      <div className="cartoes">{children}</div>
     </section>
   )
 }
 
 function Tarefa({ lembrete, detalhe, acao }: { lembrete: Lembrete; detalhe: ReactNode; acao?: ReactNode }) {
   return (
-    <div className="tarefa">
+    <article className="tarefa">
       <div className="tarefa-quem">
         <Avatar nome={lembrete.cliente.nome} />
         <div className="tarefa-texto">
           <p className="tarefa-nome">{lembrete.cliente.nome}</p>
           <p className="tarefa-detalhe">{detalhe}</p>
         </div>
-      </div>
-      <div className="tarefa-acoes">
-        <Botao
-          variante="whatsapp"
-          icone={<IconeWhatsapp />}
+        <BotaoWhatsapp
+          nome={lembrete.cliente.nome}
           onClick={() => abrirWhatsapp(lembrete.cliente.whatsapp, lembrete.mensagem)}
-        >
-          WhatsApp
-        </Botao>
-        {acao}
+        />
       </div>
-    </div>
+      {acao}
+    </article>
   )
 }

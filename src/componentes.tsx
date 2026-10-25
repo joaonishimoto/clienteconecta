@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
-import { IconeSeta, IconeVoltar } from './icones'
+import { IconeSeta, IconeVoltar, IconeWhatsapp } from './icones'
 
 type Variante = 'principal' | 'secundario' | 'whatsapp' | 'perigo' | 'leve'
 
@@ -14,6 +14,15 @@ export function Botao({
     <button type="button" className={`botao botao-${variante} ${className}`} {...props}>
       {icone}
       <span>{children}</span>
+    </button>
+  )
+}
+
+/** Só o ícone do WhatsApp: abre a conversa sem roubar a atenção da ação principal. */
+export function BotaoWhatsapp({ nome, onClick }: { nome: string; onClick: () => void }) {
+  return (
+    <button type="button" className="botao-whatsapp-icone" onClick={onClick} aria-label={`Abrir conversa com ${nome} no WhatsApp`}>
+      <IconeWhatsapp />
     </button>
   )
 }

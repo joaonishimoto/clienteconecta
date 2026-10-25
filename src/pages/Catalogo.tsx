@@ -54,14 +54,14 @@ function Lista({ editar }: { editar: (id: string) => void }) {
                   {p.recompra_dias && <span className="linha-detalhe">Lembrar de repor em {p.recompra_dias} dias</span>}
                 </span>
               </button>
-              <button type="button" className="botao-redondo" onClick={() => compartilhar(p)} aria-label={`Enviar ${p.nome} no WhatsApp`}>
+              <button type="button" className="botao-whatsapp-icone" onClick={() => compartilhar(p)} aria-label={`Enviar ${p.nome} no WhatsApp`}>
                 <IconeWhatsapp />
               </button>
             </div>
           ))}
         </div>
       )}
-      {produtos.length > 0 && <p className="campo-dica">Toque no produto para editar, ou no ícone verde para enviar.</p>}
+      {produtos.length > 0 && <p className="campo-dica">Toque no produto para editar, ou no ícone do WhatsApp para enviar à cliente.</p>}
     </>
   )
 }
