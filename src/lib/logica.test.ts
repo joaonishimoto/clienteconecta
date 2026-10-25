@@ -91,3 +91,15 @@ describe('planilha', () => {
     expect(lida).toEqual({ nome: c.nome, whatsapp: c.whatsapp, aniversario: c.aniversario, observacao: c.observacao })
   })
 })
+
+describe('mensagens de erro do login', () => {
+  it('traduz os erros mais comuns', async () => {
+    const { mensagemDeErro } = await import('./erros')
+    expect(mensagemDeErro({ code: 'invalid_credentials' })).toContain('não conferem')
+    expect(mensagemDeErro({ message: 'Email not confirmed' })).toContain('confirmar seu e-mail')
+    expect(mensagemDeErro({ name: 'AuthRetryableFetchError', status: 0 })).toContain('internet')
+    expect(mensagemDeErro({ code: 'over_email_send_rate_limit', status: 429 })).toContain('Espere um minuto')
+    expect(mensagemDeErro({ code: 'qualquer' })).toContain('Algo deu errado')
+    expect(mensagemDeErro(null)).toBe('')
+  })
+})
