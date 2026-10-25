@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { mensagemDeErro } from '../lib/erros'
 import { Aviso, Botao, Campo } from '../componentes'
-import { IconeCheck, IconeVoltar } from '../icones'
+import { IconeCadeado, IconeCheck, IconeEmail, IconePessoa, IconeVoltar } from '../icones'
 
 type Modo = 'entrar' | 'cadastrar' | 'esqueci' | 'confira-email' | 'link-enviado'
 
@@ -120,136 +120,135 @@ export function Entrar() {
     'link-enviado': 'Confira seu e-mail',
   }[modo]
 
+  const subtitulo = {
+    entrar: 'Suas clientes, vendas e lembretes num lugar só.',
+    cadastrar: 'Leva um minuto. Depois é só cadastrar suas clientes.',
+    esqueci: 'Digite o e-mail da sua conta. Vamos mandar um link para você criar uma senha nova.',
+    'confira-email': '',
+    'link-enviado': '',
+  }[modo]
+
+  const enviado = modo === 'confira-email' || modo === 'link-enviado'
+
   return (
-    <div className="entrar">
-      <header className="entrar-faixa">
-        <p className="entrar-marca">
-          <img src="/icone.svg" alt="" width={36} height={36} />
-          ClienteConecta
-        </p>
-        <p className="entrar-promessa">Suas clientes, vendas e lembretes num lugar só.</p>
-      </header>
+    <Moldura selo={enviado ? <IconeCheck /> : undefined}>
+      {(modo === 'esqueci' || modo === 'confira-email' || modo === 'link-enviado') && (
+        <button type="button" className="topo-voltar entrar-voltar" onClick={() => trocar('entrar')}>
+          <IconeVoltar /> Voltar
+        </button>
+      )}
 
-      <main className="entrar-folha">
-        {(modo === 'entrar' || modo === 'cadastrar') && (
-          <div className="abas-entrar" role="tablist" aria-label="Escolha uma opção">
-            <button type="button" role="tab" aria-selected={modo === 'entrar'} onClick={() => trocar('entrar')}>
-              Entrar
-            </button>
-            <button type="button" role="tab" aria-selected={modo === 'cadastrar'} onClick={() => trocar('cadastrar')}>
-              Criar conta
-            </button>
-            <span className={`abas-entrar-marcador ${modo === 'cadastrar' ? 'a-direita' : ''}`} aria-hidden />
-          </div>
-        )}
-
-        {(modo === 'esqueci' || modo === 'confira-email' || modo === 'link-enviado') && (
-          <button type="button" className="topo-voltar" onClick={() => trocar('entrar')}>
-            <IconeVoltar /> Voltar para entrar
-          </button>
-        )}
-
-        <div className="entrar-conteudo" key={modo}>
+      <div className="entrar-conteudo" key={modo}>
+        <header className="entrar-titulo">
           <h1>{titulo}</h1>
+          {subtitulo && <p className="topo-sub">{subtitulo}</p>}
+        </header>
 
-          {modo === 'confira-email' || modo === 'link-enviado' ? (
-            <div className="confira">
-              <span className="confira-icone">
-                <IconeCheck />
-              </span>
-              <p>
-                {modo === 'confira-email' ? 'Mandamos um link de confirmação para' : 'Mandamos um link para criar uma nova senha para'}{' '}
-                <strong>{email.trim()}</strong>.
-              </p>
-              <p className="topo-sub">Abra o e-mail e toque no link. Se não achar, olhe também na pasta de spam.</p>
-              {erro && (
-                <Aviso key={tentativa}>
-                  {erro}
-                </Aviso>
-              )}
-              <Botao variante="secundario" onClick={reenviar} disabled={espera > 0}>
-                {espera > 0 ? `Reenviar e-mail em ${espera}s` : 'Reenviar e-mail'}
-              </Botao>
-            </div>
-          ) : (
-            <>
-              {modo === 'esqueci' && (
-                <p className="topo-sub">Digite o e-mail da sua conta. Vamos mandar um link para você criar uma senha nova.</p>
-              )}
-
-              {GOOGLE_ATIVO && modo !== 'esqueci' && (
-                <>
-                  <Botao variante="secundario" icone={<img src="/google.svg" alt="" width={22} height={22} />} onClick={google}>
-                    {modo === 'cadastrar' ? 'Criar conta com Google' : 'Entrar com Google'}
-                  </Botao>
-                  <p className="ou">ou com e-mail</p>
-                </>
-              )}
-
-              <form onSubmit={enviar} className="formulario" noValidate>
-                {modo === 'cadastrar' && (
-                  <Campo
-                    rotulo="Seu nome"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    autoComplete="name"
-                    autoCapitalize="words"
-                    enterKeyHint="next"
-                    required
-                  />
-                )}
+        {enviado ? (
+          <div className="confira">
+            <p>
+              {modo === 'confira-email' ? 'Mandamos um link de confirmação para' : 'Mandamos um link para criar uma nova senha para'}{' '}
+              <strong>{email.trim()}</strong>.
+            </p>
+            <p className="topo-sub">Abra o e-mail e toque no link. Se não achar, olhe também na pasta de spam.</p>
+            {erro && <Aviso key={tentativa}>{erro}</Aviso>}
+            <Botao variante="secundario" onClick={reenviar} disabled={espera > 0}>
+              {espera > 0 ? `Reenviar e-mail em ${espera}s` : 'Reenviar e-mail'}
+            </Botao>
+          </div>
+        ) : (
+          <>
+            <form onSubmit={enviar} className="formulario" noValidate>
+              {modo === 'cadastrar' && (
                 <Campo
-                  rotulo="E-mail"
-                  type="email"
-                  inputMode="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  enterKeyHint={modo === 'esqueci' ? 'send' : 'next'}
-                  placeholder="seunome@gmail.com"
+                  rotulo="Seu nome"
+                  icone={<IconePessoa />}
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  autoComplete="name"
+                  autoCapitalize="words"
+                  enterKeyHint="next"
                   required
                 />
-                {modo !== 'esqueci' && (
-                  <CampoSenha
-                    valor={senha}
-                    mudar={setSenha}
-                    nova={modo === 'cadastrar'}
-                  />
-                )}
-
-                {erro && (
-                  <Aviso key={tentativa}>
-                    {erro}
-                  </Aviso>
-                )}
-
-                <Botao type="submit" disabled={enviando} className={enviando ? 'carregando-botao' : ''}>
-                  {enviando
-                    ? modo === 'esqueci'
-                      ? 'Enviando…'
-                      : modo === 'cadastrar'
-                        ? 'Criando sua conta…'
-                        : 'Entrando…'
-                    : modo === 'esqueci'
-                      ? 'Mandar link'
-                      : modo === 'cadastrar'
-                        ? 'Criar minha conta'
-                        : 'Entrar'}
-                </Botao>
-              </form>
+              )}
+              <Campo
+                rotulo="E-mail"
+                icone={<IconeEmail />}
+                type="email"
+                inputMode="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint={modo === 'esqueci' ? 'send' : 'next'}
+                placeholder="seunome@gmail.com"
+                required
+              />
+              {modo !== 'esqueci' && <CampoSenha valor={senha} mudar={setSenha} nova={modo === 'cadastrar'} />}
 
               {modo === 'entrar' && (
-                <button type="button" className="link-simples" onClick={() => trocar('esqueci')}>
+                <button type="button" className="entrar-esqueci" onClick={() => trocar('esqueci')}>
                   Esqueci minha senha
                 </button>
               )}
-            </>
-          )}
-        </div>
+
+              {erro && <Aviso key={tentativa}>{erro}</Aviso>}
+
+              <Botao type="submit" disabled={enviando} className={enviando ? 'carregando-botao' : ''}>
+                {enviando
+                  ? modo === 'esqueci'
+                    ? 'Enviando…'
+                    : modo === 'cadastrar'
+                      ? 'Criando sua conta…'
+                      : 'Entrando…'
+                  : modo === 'esqueci'
+                    ? 'Mandar link'
+                    : modo === 'cadastrar'
+                      ? 'Criar minha conta'
+                      : 'Entrar'}
+              </Botao>
+            </form>
+
+            {/* O botão do Google fica pronto aqui e só aparece quando o provedor for ativado no Supabase. */}
+            {GOOGLE_ATIVO && modo !== 'esqueci' && (
+              <>
+                <p className="ou">ou entre com</p>
+                <button type="button" className="entrar-google" onClick={google}>
+                  <img src="/google.svg" alt="" width={24} height={24} />
+                  {modo === 'cadastrar' ? 'Criar conta com Google' : 'Entrar com Google'}
+                </button>
+              </>
+            )}
+          </>
+        )}
+      </div>
+
+      {(modo === 'entrar' || modo === 'cadastrar') && (
+        <p className="entrar-trocar">
+          {modo === 'entrar' ? 'Primeira vez aqui?' : 'Já tem uma conta?'}
+          <button type="button" onClick={() => trocar(modo === 'entrar' ? 'cadastrar' : 'entrar')}>
+            {modo === 'entrar' ? 'Criar minha conta' : 'Entrar'}
+          </button>
+        </p>
+      )}
+    </Moldura>
+  )
+}
+
+/** Fundo azul com as linhas de campo da marca e o cartão branco no meio. */
+function Moldura({ selo, children }: { selo?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="entrar">
+      <main className="entrar-cartao">
+        {/* O selo mostra o ícone do app; depois de mandar o e-mail, vira o sinal de pronto. */}
+        <span className={`entrar-selo ${selo ? 'entrar-selo-pronto' : ''}`} key={selo ? 'pronto' : 'app'}>
+          {selo ?? <img src="/icone.svg" alt="" width={52} height={52} />}
+        </span>
+        {children}
       </main>
+      <p className="entrar-marca">ClienteConecta</p>
     </div>
   )
 }
@@ -263,7 +262,8 @@ function CampoSenha({ valor, mudar, nova }: { valor: string; mudar: (s: string) 
   return (
     <label className="campo">
       <span className="campo-rotulo">{nova ? 'Crie uma senha' : 'Senha'}</span>
-      <span className="senha">
+      <span className="senha campo-com-icone">
+        <IconeCadeado />
         <input
           type={visivel ? 'text' : 'password'}
           value={valor}
@@ -320,26 +320,20 @@ export function NovaSenha({ pronto }: { pronto: () => void }) {
   }
 
   return (
-    <div className="entrar">
-      <header className="entrar-faixa">
-        <p className="entrar-marca">
-          <img src="/icone.svg" alt="" width={36} height={36} />
-          ClienteConecta
-        </p>
-      </header>
-      <main className="entrar-folha">
-        <div className="entrar-conteudo">
+    <Moldura>
+      <div className="entrar-conteudo">
+        <header className="entrar-titulo">
           <h1>Criar nova senha</h1>
           <p className="topo-sub">Escolha a senha que você vai usar daqui para a frente.</p>
-          <form onSubmit={salvar} className="formulario" noValidate>
-            <CampoSenha valor={senha} mudar={setSenha} nova />
-            {erro && <Aviso key={tentativa}>{erro}</Aviso>}
-            <Botao type="submit" disabled={enviando}>
-              {enviando ? 'Salvando…' : 'Salvar nova senha'}
-            </Botao>
-          </form>
-        </div>
-      </main>
-    </div>
+        </header>
+        <form onSubmit={salvar} className="formulario" noValidate>
+          <CampoSenha valor={senha} mudar={setSenha} nova />
+          {erro && <Aviso key={tentativa}>{erro}</Aviso>}
+          <Botao type="submit" disabled={enviando}>
+            {enviando ? 'Salvando…' : 'Salvar nova senha'}
+          </Botao>
+        </form>
+      </div>
+    </Moldura>
   )
 }
