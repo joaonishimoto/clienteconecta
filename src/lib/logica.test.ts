@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import { diasAteAniversario, lerData, lerDinheiro, somarMeses } from './formato'
+import { diasAteAniversario, lerData, lerDinheiro, mascaraData, mascaraTelefone, semAcento, somarMeses } from './formato'
 import { linkWhatsapp, mostrarTelefone, normalizarWhatsapp } from './whatsapp'
 import { montarLembretes } from './lembretes'
 import { clientesParaCsv, lerClientes, lerProdutos } from './planilha'
 import type { Cliente, Parcela, Venda, VendaItem } from './tipos'
 
 describe('formato', () => {
+  it('formata data e telefone enquanto ela digita', () => {
+    expect(mascaraData('2512')).toBe('25/12')
+    expect(mascaraData('25121960')).toBe('25/12/1960')
+    expect(mascaraTelefone('11987654321')).toBe('(11) 98765-4321')
+    expect(mascaraTelefone('1133334444')).toBe('(11) 3333-4444')
+    expect(mascaraTelefone('119')).toBe('(11) 9')
+    expect(mascaraTelefone('')).toBe('')
+  })
+
+  it('compara nomes sem acento', () => {
+    expect(semAcento('  Fátima ')).toBe('fatima')
+  })
+
   it('lê datas do jeito brasileiro', () => {
     expect(lerData('25/12')).toBe('1900-12-25')
     expect(lerData('5/3/1958')).toBe('1958-03-05')

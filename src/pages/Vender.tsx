@@ -1,18 +1,33 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useDados } from '../lib/dados'
 import type { Aba } from '../App'
-import { dataBR, dinheiro, hojeISO, lerData, lerDinheiro, primeiroNome, somarDias, somarMeses } from '../lib/formato'
+import {
+  dataBR,
+  dinheiro,
+  hojeISO,
+  lerData,
+  lerDinheiro,
+  mascaraData,
+  mascaraTelefone,
+  primeiroNome,
+  semAcento,
+  somarDias,
+  somarMeses,
+} from '../lib/formato'
 import { abrirWhatsapp } from '../lib/whatsapp'
 import { Avatar, Aviso, Botao, Campo, Linha, Secao, Topo, Vazio } from '../componentes'
 import { IconeBusca, IconeCheck, IconeMais, IconeMenos, IconeWhatsapp } from '../icones'
 
 type ItemVenda = { produtoId: string | null; nome: string; preco: number; quantidade: number; recompraDias: number | null }
 
+const VEZES = Array.from({ length: 12 }, (_, i) => i + 1)
+
 export function Vender({ clienteInicial, irPara }: { clienteInicial: string | null; irPara: (a: Aba) => void }) {
   const { clientes, produtos, vendas, itens: itensSalvos, recarregar } = useDados()
   const [clienteId, setClienteId] = useState<string | null>(clienteInicial)
   const [busca, setBusca] = useState('')
+  const [buscaProduto, setBuscaProduto] = useState('')
   const [linhas, setLinhas] = useState<ItemVenda[]>([])
   const [avulso, setAvulso] = useState({ nome: '', preco: '' })
   const [vezes, setVezes] = useState(1)
@@ -21,9 +36,21 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [concluida, setConcluida] = useState<{ total: number; vezes: number } | null>(null)
+  const [vendoResumo, setVendoResumo] = useState(false)
+
+  // A barra fixa some quando o resumo já está na tela, para não mostrar o total duas vezes.
+  const temItens = linhas.length > 0
+  useEffect(() => {
+    const resumo = document.getElementById('resumo-venda')
+    if (!resumo || !('IntersectionObserver' in window)) return
+    const o = new IntersectionObserver(([e]) => setVendoResumo(e.isIntersecting))
+    o.observe(resumo)
+    return () => o.disconnect()
+  }, [temItens, clienteId])
 
   const cliente = clientes.find((c) => c.id === clienteId)
   const total = linhas.reduce((s, l) => s + l.preco * l.quantidade, 0)
+  const pecas = linhas.reduce((s, l) => s + l.quantidade, 0)
 
   if (concluida && cliente) {
     const lista = linhas.map((l) => `• ${l.quantidade}x ${l.nome}`).join('\n')
@@ -54,38 +81,8 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
     )
   }
 
-  // Passo 1: escolher a cliente.
-  if (!cliente) {
-    const termo = busca.toLowerCase().trim()
-    const lista = clientes.filter((c) => c.nome.toLowerCase().includes(termo))
-    return (
-      <>
-        <Topo titulo="Nova venda" subtitulo="Para quem é a venda?" />
-        {clientes.length > 5 && (
-          <label className="busca">
-            <IconeBusca />
-            <input
-              type="search"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Procurar pelo nome"
-              aria-label="Procurar cliente"
-            />
-          </label>
-        )}
-        {clientes.length === 0 && (
-          <Vazio titulo="Nenhuma cliente cadastrada">Cadastre a cliente na aba Clientes e volte aqui para vender.</Vazio>
-        )}
-        {lista.length > 0 && (
-          <Secao>
-            {lista.map((c) => (
-              <Linha key={c.id} inicio={<Avatar nome={c.nome} />} titulo={c.nome} onClick={() => setClienteId(c.id)} />
-            ))}
-          </Secao>
-        )}
-      </>
-    )
-  }
+  // Passo 1: escolher a cliente (ou cadastrar ali mesmo).
+  if (!cliente) return <EscolherCliente busca={busca} setBusca={setBusca} escolher={setClienteId} />
 
   const adicionar = (l: Omit<ItemVenda, 'quantidade'>) =>
     setLinhas((atual) => {
@@ -157,23 +154,42 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
   }
 
   const quantidadeDe = (id: string) => linhas.find((l) => l.produtoId === id)?.quantidade ?? 0
+  const termoProduto = semAcento(buscaProduto)
+  const produtosVistos = produtos.filter((p) => semAcento(p.nome).includes(termoProduto))
+  const irParaResumo = () => document.getElementById('resumo-venda')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   return (
     <>
       <Topo
         titulo={`Venda para ${primeiroNome(cliente.nome)}`}
-        subtitulo="Toque nos produtos que ela levou."
-        voltar={clienteInicial ? undefined : () => setClienteId(null)}
+        subtitulo="Toque nos produtos que ela levou. Cada toque soma mais um."
+        voltar={() => {
+          setClienteId(null)
+          setLinhas([])
+        }}
       />
 
       {/* No computador, o resumo e o pagamento ficam ao lado dos produtos. */}
       <div className="venda-colunas">
         <div className="venda-produtos">
+          {produtos.length > 8 && (
+            <label className="busca">
+              <IconeBusca />
+              <input
+                type="search"
+                value={buscaProduto}
+                onChange={(e) => setBuscaProduto(e.target.value)}
+                placeholder="Procurar produto"
+                aria-label="Procurar produto"
+              />
+            </label>
+          )}
           {produtos.length === 0 && (
             <Vazio titulo="Catálogo vazio">Cadastre produtos no Catálogo, ou digite o produto logo abaixo.</Vazio>
           )}
+          {produtos.length > 0 && produtosVistos.length === 0 && <Vazio titulo="Nenhum produto com esse nome" />}
           <div className="grade-produtos">
-            {produtos.map((p) => {
+            {produtosVistos.map((p) => {
               const qtd = quantidadeDe(p.id)
               return (
                 <button
@@ -181,11 +197,18 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
                   key={p.id}
                   className={`produto-botao ${qtd ? 'produto-escolhido' : ''}`}
                   onClick={() => adicionar({ produtoId: p.id, nome: p.nome, preco: p.preco, recompraDias: p.recompra_dias })}
+                  aria-label={qtd ? `${p.nome}, ${qtd} na venda. Tocar para somar mais um` : `Adicionar ${p.nome}`}
                 >
                   {p.foto_url ? <img src={p.foto_url} alt="" /> : <span className="produto-sem-foto">{p.nome.charAt(0)}</span>}
                   <span className="produto-nome">{p.nome}</span>
                   <span className="produto-preco">{dinheiro(p.preco)}</span>
-                  {qtd > 0 && <span className="produto-qtd">{qtd}</span>}
+                  {qtd > 0 ? (
+                    <span className="produto-qtd">{qtd}</span>
+                  ) : (
+                    <span className="produto-somar" aria-hidden>
+                      <IconeMais />
+                    </span>
+                  )}
                 </button>
               )
             })}
@@ -208,12 +231,7 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
                 variante="secundario"
                 disabled={!avulso.nome.trim() || lerDinheiro(avulso.preco) <= 0}
                 onClick={() => {
-                  adicionar({
-                    produtoId: null,
-                    nome: avulso.nome.trim(),
-                    preco: lerDinheiro(avulso.preco),
-                    recompraDias: null,
-                  })
+                  adicionar({ produtoId: null, nome: avulso.nome.trim(), preco: lerDinheiro(avulso.preco), recompraDias: null })
                   setAvulso({ nome: '', preco: '' })
                 }}
               >
@@ -228,13 +246,16 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
             <Vazio titulo="Nenhum produto ainda">Toque nos produtos ao lado. O total e o pagamento aparecem aqui.</Vazio>
           </div>
         ) : (
-          <div className="venda-resumo">
+          <div className="venda-resumo" id="resumo-venda">
             <Secao titulo="Resumo">
               {linhas.map((l, i) => (
                 <div className="linha-venda" key={i}>
                   <span className="linha-texto">
                     <span className="linha-titulo">{l.nome}</span>
-                    <span className="linha-detalhe">{dinheiro(l.preco * l.quantidade)}</span>
+                    <span className="linha-detalhe">
+                      {l.quantidade > 1 ? `${l.quantidade} x ${dinheiro(l.preco)} = ` : ''}
+                      {dinheiro(l.preco * l.quantidade)}
+                    </span>
                   </span>
                   <span className="quantidade">
                     <button type="button" onClick={() => mudarQuantidade(i, -1)} aria-label={`Tirar um ${l.nome}`}>
@@ -254,23 +275,32 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
             </Secao>
 
             <section className="secao">
-              <h2>Pagamento</h2>
+              <h2>Como ela vai pagar?</h2>
+              <div className="vezes" role="radiogroup" aria-label="Número de parcelas">
+                {VEZES.map((n) => (
+                  <button key={n} type="button" role="radio" aria-checked={vezes === n} onClick={() => setVezes(n)}>
+                    {n === 1 ? 'À vista' : `${n}x`}
+                  </button>
+                ))}
+              </div>
+              <p className="vezes-valor">
+                {vezes === 1 ? (
+                  <>
+                    À vista: <strong>{dinheiro(total)}</strong>
+                  </>
+                ) : (
+                  <>
+                    {vezes} parcelas de <strong>{dinheiro(total / vezes)}</strong>
+                  </>
+                )}
+              </p>
               <div className="formulario">
-                <label className="campo">
-                  <span className="campo-rotulo">Forma</span>
-                  <select value={vezes} onChange={(e) => setVezes(Number(e.target.value))}>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                      <option key={n} value={n}>
-                        {n === 1 ? 'À vista' : `${n}x de ${dinheiro(total / n)}`}
-                      </option>
-                    ))}
-                  </select>
-                </label>
                 <Campo
                   rotulo={vezes === 1 ? 'Data do pagamento' : 'Data da 1ª parcela'}
                   inputMode="numeric"
                   value={primeiroVencimento}
-                  onChange={(e) => setPrimeiroVencimento(e.target.value)}
+                  onChange={(e) => setPrimeiroVencimento(mascaraData(e.target.value))}
+                  placeholder="25/12/2026"
                   dica={vezes > 1 ? 'As outras parcelas vencem no mesmo dia dos meses seguintes.' : undefined}
                 />
                 <label className="checkbox">
@@ -287,6 +317,122 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
           </div>
         )}
       </div>
+
+      {/* No celular, uma barra fixa mostra o total e leva ao pagamento sem precisar rolar. */}
+      {linhas.length > 0 && !vendoResumo && (
+        <div className="venda-barra">
+          <span>
+            {pecas} {pecas === 1 ? 'item' : 'itens'}
+            <strong>{dinheiro(total)}</strong>
+          </span>
+          <button type="button" className="botao botao-principal" onClick={irParaResumo}>
+            <span>Continuar</span>
+          </button>
+        </div>
+      )}
+    </>
+  )
+}
+
+/** Passo 1: lista de clientes com as que compraram por último no topo, e cadastro rápido ali mesmo. */
+function EscolherCliente({
+  busca,
+  setBusca,
+  escolher,
+}: {
+  busca: string
+  setBusca: (b: string) => void
+  escolher: (id: string) => void
+}) {
+  const { clientes, vendas, recarregar } = useDados()
+  const [nova, setNova] = useState({ nome: '', whatsapp: '' })
+  const [cadastrando, setCadastrando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const termo = semAcento(busca)
+  const lista = clientes.filter((c) => semAcento(c.nome).includes(termo))
+  // As vendas já vêm da mais nova para a mais antiga.
+  const recentes = [...new Set(vendas.map((v) => v.cliente_id))]
+    .map((id) => clientes.find((c) => c.id === id))
+    .filter((c) => c !== undefined)
+    .slice(0, 3)
+  const mostrarRecentes = !termo && clientes.length > 5 && recentes.length > 0
+  // Se ela procurou um nome que não existe, o cadastro já começa com esse nome.
+  const nomeNovo = nova.nome || (lista.length === 0 ? busca : '')
+
+  async function cadastrar() {
+    setErro('')
+    setCadastrando(true)
+    const r = await supabase
+      .from('clientes')
+      .insert({ nome: nomeNovo.trim(), whatsapp: nova.whatsapp.trim(), aniversario: null, observacao: '' })
+      .select('id')
+      .single()
+    setCadastrando(false)
+    if (r.error) return setErro('Não foi possível cadastrar. Confira a internet e tente de novo.')
+    await recarregar()
+    escolher(r.data.id)
+  }
+
+  return (
+    <>
+      <Topo titulo="Nova venda" subtitulo="Para quem é a venda?" />
+      {clientes.length > 5 && (
+        <label className="busca">
+          <IconeBusca />
+          <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Procurar pelo nome"
+            aria-label="Procurar cliente"
+          />
+        </label>
+      )}
+
+      {mostrarRecentes && (
+        <Secao titulo="Compraram por último">
+          {recentes.map((c) => (
+            <Linha key={c.id} inicio={<Avatar nome={c.nome} />} titulo={c.nome} onClick={() => escolher(c.id)} />
+          ))}
+        </Secao>
+      )}
+
+      {clientes.length > 0 && lista.length === 0 && <Vazio titulo="Ninguém com esse nome">Cadastre logo abaixo.</Vazio>}
+      {lista.length > 0 && (
+        <Secao titulo={mostrarRecentes ? 'Todas as clientes' : undefined}>
+          {lista.map((c) => (
+            <Linha key={c.id} inicio={<Avatar nome={c.nome} />} titulo={c.nome} onClick={() => escolher(c.id)} />
+          ))}
+        </Secao>
+      )}
+
+      <details className="avulso" open={clientes.length === 0 || (termo !== '' && lista.length === 0)}>
+        <summary>
+          <IconeMais /> Cliente nova? Cadastrar agora
+        </summary>
+        <div className="avulso-campos">
+          <Campo
+            rotulo="Nome"
+            value={nomeNovo}
+            onChange={(e) => setNova({ ...nova, nome: e.target.value })}
+            autoCapitalize="words"
+            placeholder="Ex.: Ana Lúcia Ferreira"
+          />
+          <Campo
+            rotulo="WhatsApp"
+            type="tel"
+            inputMode="tel"
+            value={nova.whatsapp}
+            onChange={(e) => setNova({ ...nova, whatsapp: mascaraTelefone(e.target.value) })}
+            placeholder="(11) 98765-4321"
+          />
+          {erro && <Aviso>{erro}</Aviso>}
+          <Botao variante="secundario" disabled={!nomeNovo.trim() || cadastrando} onClick={cadastrar}>
+            {cadastrando ? 'Cadastrando…' : 'Cadastrar e continuar a venda'}
+          </Botao>
+        </div>
+      </details>
     </>
   )
 }

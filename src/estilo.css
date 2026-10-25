@@ -246,6 +246,52 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-left: 4px solid var(--perigo); font-weight: 700;
 }
 .destaque-receber strong { font-size: 1.45rem; color: var(--perigo); }
+.destaque-receber-texto { display: flex; flex-direction: column; gap: 0.1rem; line-height: 1.25; }
+.destaque-receber-em-dia { border-left-color: var(--alerta); }
+.destaque-receber-em-dia strong { color: var(--marca-forte); }
+
+/* Barra da ficha: voltar à esquerda, editar à direita */
+.ficha-barra { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: -0.4rem; }
+.ficha-barra .topo-voltar { margin-top: -0.5rem; margin-bottom: -0.5rem; }
+.ficha-editar, .botao-pequeno { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; }
+.botao-pequeno svg { width: 18px; height: 18px; flex: none; }
+
+/* Números da cliente: quanto já comprou, quantas vezes e quando foi a última */
+.ficha-resumo { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.ficha-resumo li {
+  display: flex; flex-direction: column; padding: 0.6rem 0.75rem; border-radius: var(--raio-pequeno);
+  background: var(--painel); box-shadow: var(--sombra);
+  font-size: 0.82rem; font-weight: 600; color: var(--texto-suave); line-height: 1.25;
+}
+.ficha-resumo strong { font-size: 1.05rem; font-weight: 800; color: var(--marca-forte); white-space: nowrap; }
+
+/* Compras na ficha */
+.compra-paga, .compra-pagas { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; color: var(--ok); }
+.compra-pagas { font-weight: 600; font-size: 0.92rem; color: var(--texto-suave); }
+.compra-paga svg, .compra-pagas svg { width: 20px; height: 20px; flex: none; }
+.compra-pagas svg { color: var(--ok); }
+.parcela small.parcela-atrasada { color: var(--perigo); font-weight: 700; }
+
+/* Aviso com botão de desfazer */
+.aviso-com-acao { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.aviso-com-acao button {
+  flex: none; min-height: 44px; padding: 0 0.9rem; border: 1.5px solid currentColor; border-radius: var(--raio-pequeno);
+  background: var(--painel); color: inherit; font-weight: 700;
+}
+
+/* Filtro da lista de clientes */
+.filtros { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.filtros button {
+  display: inline-flex; align-items: center; gap: 0.45rem; min-height: 48px; padding: 0 1rem;
+  border: 1.5px solid var(--marca-linha); border-radius: var(--raio-pequeno); background: var(--painel);
+  color: var(--marca); font-weight: 700;
+}
+.filtros button span {
+  min-width: 1.6rem; padding: 0 0.35rem; border-radius: 4px; background: var(--marca-clara);
+  font-size: 0.85rem; text-align: center;
+}
+.filtros button[aria-pressed='true'] { background: var(--marca); border-color: var(--marca); color: #fff; }
+.filtros button[aria-pressed='true'] span { background: rgba(255, 255, 255, 0.2); }
 .compra { padding: 1rem 1.1rem; border-top: 1px solid var(--linha); display: flex; flex-direction: column; gap: 0.4rem; }
 .painel > .compra:first-child { border-top: none; }
 .compra-topo { display: flex; justify-content: space-between; color: var(--texto-suave); font-weight: 600; }
@@ -303,6 +349,37 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .concluida-icone { display: grid; place-items: center; width: 76px; height: 76px; border-radius: var(--raio); background: var(--marca); color: #fff; }
 .concluida-icone svg { width: 40px; height: 40px; stroke-width: 2.5; }
 .concluida .topo-sub { margin-bottom: 0.75rem; }
+
+/* Sinal de "+" no canto do produto ainda não escolhido */
+.produto-somar {
+  position: absolute; top: 0.55rem; right: 0.55rem; display: grid; place-items: center; width: 34px; height: 34px;
+  border-radius: var(--raio-pequeno); background: rgba(255, 255, 255, 0.92); color: var(--marca);
+  box-shadow: 0 1px 3px rgba(0, 40, 100, 0.2);
+}
+.produto-somar svg { width: 20px; height: 20px; }
+
+/* Parcelas: botões grandes no lugar da lista suspensa */
+.vezes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.45rem; }
+.vezes button {
+  min-height: 52px; border: 1.5px solid var(--marca-linha); border-radius: var(--raio-pequeno);
+  background: var(--painel); color: var(--marca); font-weight: 700;
+}
+.vezes button[aria-checked='true'] { background: var(--marca); border-color: var(--marca); color: #fff; box-shadow: 0 2px 0 var(--marca-forte); }
+.vezes-valor { padding: 0.2rem 0 0.3rem; color: var(--texto-suave); font-weight: 600; }
+.vezes-valor strong { color: var(--marca-forte); font-size: 1.2rem; }
+
+/* Barra fixa da venda no celular, logo acima das abas */
+.venda-barra {
+  position: fixed; left: 0; right: 0; bottom: calc(82px + env(safe-area-inset-bottom)); z-index: 9;
+  max-width: 600px; margin: 0 auto; padding: 0.6rem 1rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  background: var(--painel); box-shadow: 0 -1px 0 var(--linha), 0 -6px 16px rgba(0, 40, 100, 0.1);
+}
+.venda-barra > span { display: flex; flex-direction: column; line-height: 1.2; color: var(--texto-suave); font-weight: 600; font-size: 0.9rem; }
+.venda-barra strong { font-size: 1.3rem; font-weight: 800; color: var(--marca-forte); }
+.venda-barra .botao { flex: none; width: auto; min-height: 52px; padding: 0.6rem 1.4rem; }
+.conteudo:has(.venda-barra) { padding-bottom: 6rem; }
+#resumo-venda { scroll-margin-top: 5rem; }
 
 /* Catálogo */
 .produto-linha { display: flex; align-items: center; gap: 0.5rem; padding-right: 1rem; border-top: 1px solid var(--linha); }
@@ -499,6 +576,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .venda-colunas { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 1.75rem; align-items: start; }
   .venda-resumo { position: sticky; top: 2rem; }
   .venda-resumo-vazio { display: flex; }
+  .venda-barra { display: none; }
+  .conteudo:has(.venda-barra) { padding-bottom: 3.5rem; }
+  .filtros button:hover:not([aria-pressed='true']), .vezes button:hover:not([aria-checked='true']) { background: var(--marca-clara); }
   .concluida { max-width: 480px; margin: 0 auto; width: 100%; }
 
   .linha-clicavel:hover, .produto-abrir:hover { background: var(--marca-clara); }

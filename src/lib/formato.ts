@@ -78,3 +78,25 @@ export function diasAteAniversario(aniversario: string, hoje: string): number {
 export function primeiroNome(nome: string): string {
   return nome.trim().split(/\s+/)[0] ?? ''
 }
+
+/** Coloca a barra sozinha enquanto ela digita: "2512" vira "25/12" e "25121960" vira "25/12/1960". */
+export function mascaraData(texto: string): string {
+  const d = texto.replace(/\D/g, '').slice(0, 8)
+  if (d.length <= 2) return d
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`
+}
+
+/** Formata o telefone enquanto ela digita: "11987654321" vira "(11) 98765-4321". */
+export function mascaraTelefone(texto: string): string {
+  const d = texto.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 2) return d.length ? `(${d}` : ''
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+}
+
+/** Compara nomes sem acento, maiúsculas nem espaços nas pontas. */
+export function semAcento(t: string): string {
+  return t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+}
