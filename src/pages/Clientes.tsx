@@ -4,8 +4,8 @@ import { useDados } from '../lib/dados'
 import type { Cliente, VendaItem } from '../lib/tipos'
 import { dataBR, diaMes, dinheiro, hojeISO, lerData, primeiroNome } from '../lib/formato'
 import { abrirWhatsapp, mostrarTelefone } from '../lib/whatsapp'
-import { Acoes, Avatar, Aviso, Botao, Campo, Linha, Secao, Topo, Vazio } from '../componentes'
-import { IconeBolo, IconeBusca, IconeCheck, IconeEditar, IconeLixo, IconeMais, IconeVender, IconeVoltar, IconeWhatsapp } from '../icones'
+import { Avatar, Aviso, Botao, BotaoWhatsapp, Campo, Linha, Secao, Topo, Vazio } from '../componentes'
+import { IconeBolo, IconeBusca, IconeCheck, IconeEditar, IconeLixo, IconeMais, IconeVender, IconeVoltar } from '../icones'
 
 type Tela = { tipo: 'lista' } | { tipo: 'ficha'; id: string } | { tipo: 'form'; id?: string }
 
@@ -107,10 +107,13 @@ function Ficha({ id, voltar, editar, vender }: { id: string; voltar: () => void;
       </button>
       <header className="ficha-topo">
         <Avatar nome={c.nome} />
-        <div>
+        <div className="ficha-nome">
           <h1>{c.nome}</h1>
           {c.whatsapp && <p className="topo-sub">{mostrarTelefone(c.whatsapp)}</p>}
         </div>
+        {c.whatsapp && (
+          <BotaoWhatsapp nome={c.nome} onClick={() => abrirWhatsapp(c.whatsapp, `Oi ${primeiroNome(c.nome)}, tudo bem?`)} />
+        )}
       </header>
       {erro && <Aviso>{erro}</Aviso>}
 
@@ -121,20 +124,9 @@ function Ficha({ id, voltar, editar, vender }: { id: string; voltar: () => void;
         </div>
       )}
 
-      <Acoes>
-        {c.whatsapp && (
-          <Botao
-            variante="whatsapp"
-            icone={<IconeWhatsapp />}
-            onClick={() => abrirWhatsapp(c.whatsapp, `Oi ${primeiroNome(c.nome)}, tudo bem?`)}
-          >
-            WhatsApp
-          </Botao>
-        )}
-        <Botao icone={<IconeVender />} onClick={() => vender(c.id)}>
-          Nova venda
-        </Botao>
-      </Acoes>
+      <Botao icone={<IconeVender />} onClick={() => vender(c.id)}>
+        Nova venda
+      </Botao>
 
       {(c.aniversario || c.observacao) && (
         <Secao>
