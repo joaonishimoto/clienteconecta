@@ -4,7 +4,8 @@ import { useDados } from '../lib/dados'
 import type { Cliente, VendaItem } from '../lib/tipos'
 import { dataBR, diaMes, dinheiro, hojeISO, lerData, primeiroNome } from '../lib/formato'
 import { abrirWhatsapp, mostrarTelefone } from '../lib/whatsapp'
-import { Aviso, Botao, Campo, Cartao, Topo, Vazio } from '../componentes'
+import { Acoes, Avatar, Aviso, Botao, Campo, Linha, Secao, Topo, Vazio } from '../componentes'
+import { IconeBolo, IconeBusca, IconeCheck, IconeEditar, IconeLixo, IconeMais, IconeVender, IconeVoltar, IconeWhatsapp } from '../icones'
 
 type Tela = { tipo: 'lista' } | { tipo: 'ficha'; id: string } | { tipo: 'form'; id?: string }
 
@@ -24,25 +25,59 @@ export function Clientes({ vender }: { vender: (clienteId: string) => void }) {
 }
 
 function Lista({ abrir, nova }: { abrir: (id: string) => void; nova: () => void }) {
-  const { clientes } = useDados()
+  const { clientes, vendas, parcelas } = useDados()
   const [busca, setBusca] = useState('')
   const termo = semAcento(busca)
   const filtradas = clientes.filter((c) => semAcento(c.nome).includes(termo) || c.whatsapp.includes(busca.trim()))
+  const devendo = new Set(
+    parcelas.filter((p) => !p.pago_em).map((p) => vendas.find((v) => v.id === p.venda_id)?.cliente_id),
+  )
 
   return (
     <>
-      <Topo titulo="Clientes" />
-      <Botao onClick={nova}>+ Nova cliente</Botao>
+      <Topo
+        titulo="Clientes"
+        subtitulo={clientes.length ? `${clientes.length} ${clientes.length === 1 ? 'cliente' : 'clientes'}` : undefined}
+      />
+      <Botao icone={<IconeMais />} onClick={nova}>
+        Nova cliente
+      </Botao>
       {clientes.length > 5 && (
-        <Campo rotulo="Procurar" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Digite o nome" />
+        <label className="busca">
+          <IconeBusca />
+          <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Procurar pelo nome"
+            aria-label="Procurar cliente"
+          />
+        </label>
       )}
-      {clientes.length === 0 && <Vazio>Você ainda não tem clientes. Toque em “+ Nova cliente” para começar.</Vazio>}
-      {filtradas.map((c) => (
-        <Cartao key={c.id} onClick={() => abrir(c.id)}>
-          <h3>{c.nome}</h3>
-          {c.whatsapp && <p>{mostrarTelefone(c.whatsapp)}</p>}
-        </Cartao>
-      ))}
+      {clientes.length === 0 && (
+        <Vazio titulo="Nenhuma cliente ainda">
+          Cadastre a primeira em “Nova cliente”, ou traga sua lista de uma planilha em Minha conta.
+        </Vazio>
+      )}
+      {clientes.length > 0 && filtradas.length === 0 && <Vazio titulo="Ninguém com esse nome" />}
+      {filtradas.length > 0 && (
+        <Secao>
+          {filtradas.map((c) => (
+            <Linha
+              key={c.id}
+              inicio={<Avatar nome={c.nome} />}
+              titulo={c.nome}
+              detalhe={
+                <>
+                  {c.whatsapp ? mostrarTelefone(c.whatsapp) : 'Sem WhatsApp'}
+                  {devendo.has(c.id) && <span className="selo selo-atrasado">Tem valor a receber</span>}
+                </>
+              }
+              onClick={() => abrir(c.id)}
+            />
+          ))}
+        </Secao>
+      )}
     </>
   )
 }
@@ -61,59 +96,89 @@ function Ficha({ id, voltar, editar, vender }: { id: string; voltar: () => void;
   async function receber(parcelaId: string) {
     setErro('')
     const { error } = await supabase.from('parcelas').update({ pago_em: hojeISO() }).eq('id', parcelaId)
-    if (error) setErro('Não consegui salvar. Confira a internet e tente de novo.')
+    if (error) setErro('Não foi possível salvar. Confira a internet e tente de novo.')
     await recarregar()
   }
 
   return (
     <>
-      <Topo titulo={c.nome} voltar={voltar} />
-      {erro && <Aviso>{erro}</Aviso>}
-      <div className="cartao">
-        {c.whatsapp && <p>📱 {mostrarTelefone(c.whatsapp)}</p>}
-        {c.aniversario && <p>🎂 Aniversário: {diaMes(c.aniversario)}</p>}
-        {c.observacao && <p>📝 {c.observacao}</p>}
-        {emAberto > 0 && (
-          <p className="atrasada">
-            Falta receber: <strong>{dinheiro(emAberto)}</strong>
-          </p>
-        )}
-      </div>
-      {c.whatsapp && (
-        <Botao variante="whatsapp" onClick={() => abrirWhatsapp(c.whatsapp, `Oi ${primeiroNome(c.nome)}, tudo bem?`)}>
-          Chamar no WhatsApp
-        </Botao>
-      )}
-      <Botao onClick={() => vender(c.id)}>🛒 Nova venda para ela</Botao>
-      <Botao variante="secundario" onClick={editar}>
-        ✏️ Editar dados
-      </Botao>
-
-      <h2>Compras</h2>
-      {compras.length === 0 && <Vazio>Nenhuma compra ainda.</Vazio>}
-      {compras.map((v) => (
-        <div className="cartao" key={v.id}>
-          <h3>
-            {dataBR(v.data)} · {dinheiro(v.total)}
-          </h3>
-          {itens.some((i) => i.venda_id === v.id) && <p>{descreverItens(itens.filter((i) => i.venda_id === v.id))}</p>}
-          {parcelas
-            .filter((p) => p.venda_id === v.id)
-            .map((p) => (
-              <div className="parcela" key={p.id}>
-                <span>
-                  {p.de > 1 ? `${p.numero}/${p.de} · ` : ''}
-                  {dinheiro(p.valor)} · {p.pago_em ? `pago em ${diaMes(p.pago_em)}` : `vence ${diaMes(p.vencimento)}`}
-                </span>
-                {!p.pago_em && (
-                  <button type="button" className="botao-pequeno" onClick={() => receber(p.id)}>
-                    ✓ Recebi
-                  </button>
-                )}
-              </div>
-            ))}
+      <button type="button" className="topo-voltar" onClick={voltar}>
+        <IconeVoltar /> Clientes
+      </button>
+      <header className="ficha-topo">
+        <Avatar nome={c.nome} />
+        <div>
+          <h1>{c.nome}</h1>
+          {c.whatsapp && <p className="topo-sub">{mostrarTelefone(c.whatsapp)}</p>}
         </div>
-      ))}
+      </header>
+      {erro && <Aviso>{erro}</Aviso>}
+
+      {emAberto > 0 && (
+        <div className="destaque-receber">
+          <span>Falta receber</span>
+          <strong>{dinheiro(emAberto)}</strong>
+        </div>
+      )}
+
+      <Acoes>
+        {c.whatsapp && (
+          <Botao
+            variante="whatsapp"
+            icone={<IconeWhatsapp />}
+            onClick={() => abrirWhatsapp(c.whatsapp, `Oi ${primeiroNome(c.nome)}, tudo bem?`)}
+          >
+            WhatsApp
+          </Botao>
+        )}
+        <Botao icone={<IconeVender />} onClick={() => vender(c.id)}>
+          Nova venda
+        </Botao>
+      </Acoes>
+
+      {(c.aniversario || c.observacao) && (
+        <Secao>
+          {c.aniversario && <Linha inicio={<IconeBolo />} titulo="Aniversário" fim={diaMes(c.aniversario)} />}
+          {c.observacao && <Linha inicio={<IconeEditar />} titulo={c.observacao} />}
+        </Secao>
+      )}
+
+      <Secao titulo="Compras">
+        {compras.length === 0 && <p className="painel-vazio">Nenhuma compra ainda.</p>}
+        {compras.map((v) => (
+          <div className="compra" key={v.id}>
+            <div className="compra-topo">
+              <span>{dataBR(v.data)}</span>
+              <strong>{dinheiro(v.total)}</strong>
+            </div>
+            {itens.some((i) => i.venda_id === v.id) && (
+              <p className="compra-itens">{descreverItens(itens.filter((i) => i.venda_id === v.id))}</p>
+            )}
+            {parcelas
+              .filter((p) => p.venda_id === v.id)
+              .map((p) => (
+                <div className={`parcela ${p.pago_em ? 'parcela-paga' : ''}`} key={p.id}>
+                  <span>
+                    {p.de > 1 ? `${p.numero}ª de ${p.de}, ` : ''}
+                    {dinheiro(p.valor)}
+                    <small>{p.pago_em ? `Pago em ${diaMes(p.pago_em)}` : `Vence ${diaMes(p.vencimento)}`}</small>
+                  </span>
+                  {p.pago_em ? (
+                    <IconeCheck className="parcela-ok" />
+                  ) : (
+                    <button type="button" className="botao-pequeno" onClick={() => receber(p.id)}>
+                      Recebi
+                    </button>
+                  )}
+                </div>
+              ))}
+          </div>
+        ))}
+      </Secao>
+
+      <Botao variante="secundario" icone={<IconeEditar />} onClick={editar}>
+        Editar dados
+      </Botao>
     </>
   )
 }
@@ -148,7 +213,7 @@ function FormCliente({
       ? await supabase.from('clientes').update(dados).eq('id', id).select('id').single()
       : await supabase.from('clientes').insert(dados).select('id').single()
     setSalvando(false)
-    if (r.error) return setErro('Não consegui salvar. Confira a internet e tente de novo.')
+    if (r.error) return setErro('Não foi possível salvar. Confira a internet e tente de novo.')
     await recarregar()
     salvo(r.data.id)
   }
@@ -156,7 +221,7 @@ function FormCliente({
   async function excluir() {
     if (!id || !confirm(`Apagar ${nome}? As compras dela também serão apagadas.`)) return
     const { error } = await supabase.from('clientes').delete().eq('id', id)
-    if (error) return setErro('Não consegui apagar. Tente de novo.')
+    if (error) return setErro('Não foi possível apagar. Tente de novo.')
     await recarregar()
     excluido()
   }
@@ -184,10 +249,10 @@ function FormCliente({
         <Campo rotulo="Anotação" value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Ex.: prefere chá de ervas" />
         {erro && <Aviso>{erro}</Aviso>}
         <Botao type="submit" disabled={salvando}>
-          Salvar
+          {salvando ? 'Salvando…' : 'Salvar'}
         </Botao>
         {id && (
-          <Botao variante="perigo" onClick={excluir}>
+          <Botao variante="perigo" icone={<IconeLixo />} onClick={excluir}>
             Apagar cliente
           </Botao>
         )}

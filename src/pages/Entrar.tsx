@@ -32,11 +32,11 @@ export function Entrar() {
           password: senha,
           options: { data: { nome }, emailRedirectTo: window.location.origin },
         })
-        if (error) setErro('Não deu certo o cadastro. Confira o e-mail e tente de novo.')
+        if (error) setErro('Não foi possível criar a conta. Confira o e-mail, ele pode já estar cadastrado.')
         else if (!data.session) setOk('Pronto! Enviamos um e-mail para você confirmar o cadastro.')
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin })
-        if (error) setErro('Não consegui enviar o e-mail. Tente de novo.')
+        if (error) setErro('Não foi possível enviar o e-mail. Tente de novo.')
         else setOk('Enviamos um e-mail com o link para criar uma nova senha.')
       }
     } finally {
@@ -57,15 +57,20 @@ export function Entrar() {
   return (
     <main className="entrar">
       <div className="marca">
-        <img src="/icone.svg" alt="" width={72} height={72} />
-        <h1>ClienteConecta</h1>
-        <p>Suas clientes, vendas e lembretes num lugar só.</p>
+        <img src="/icone.svg" alt="" width={64} height={64} />
+        <p className="marca-nome">ClienteConecta</p>
+        <h1>{modo === 'entrar' ? 'Entrar na sua conta' : modo === 'cadastrar' ? 'Criar sua conta' : 'Criar nova senha'}</h1>
+        <p className="topo-sub">
+          {modo === 'esqueci'
+            ? 'Mandamos um link para o seu e-mail.'
+            : 'Suas clientes, vendas e lembretes num lugar só.'}
+        </p>
       </div>
 
       {GOOGLE_ATIVO && modo !== 'esqueci' && (
         <>
-          <Botao variante="secundario" className="botao-google" onClick={google}>
-            <img src="/google.svg" alt="" width={24} height={24} /> Entrar com Google
+          <Botao variante="secundario" icone={<img src="/google.svg" alt="" width={22} height={22} />} onClick={google}>
+            Entrar com Google
           </Botao>
           <p className="ou">ou</p>
         </>
@@ -122,14 +127,16 @@ export function NovaSenha({ pronto }: { pronto: () => void }) {
     e.preventDefault()
     if (senha.length < 6) return setErro('A senha precisa ter pelo menos 6 letras ou números.')
     const { error } = await supabase.auth.updateUser({ password: senha })
-    if (error) setErro('Não consegui trocar a senha. Peça um novo link.')
+    if (error) setErro('Não foi possível trocar a senha. Peça um novo link.')
     else pronto()
   }
 
   return (
     <main className="entrar">
       <div className="marca">
+        <img src="/icone.svg" alt="" width={64} height={64} />
         <h1>Criar nova senha</h1>
+        <p className="topo-sub">Escolha uma senha com pelo menos 6 letras ou números.</p>
       </div>
       <form onSubmit={salvar} className="formulario">
         <Campo rotulo="Nova senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} autoComplete="new-password" required />

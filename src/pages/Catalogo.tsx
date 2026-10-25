@@ -6,6 +6,7 @@ import { dinheiro, lerDinheiro } from '../lib/formato'
 import { enviarFoto } from '../lib/foto'
 import { abrirWhatsapp } from '../lib/whatsapp'
 import { Aviso, Botao, Campo, Topo, Vazio } from '../componentes'
+import { IconeCamera, IconeLixo, IconeMais, IconeWhatsapp } from '../icones'
 
 const RECOMPRA = [
   { dias: 0, nome: 'Não lembrar' },
@@ -27,25 +28,40 @@ function Lista({ editar }: { editar: (id: string) => void }) {
   const { produtos } = useDados()
   return (
     <>
-      <Topo titulo="Catálogo" />
-      <Botao onClick={() => editar('novo')}>+ Novo produto</Botao>
-      {produtos.length === 0 && <Vazio>Cadastre seus produtos para vender mais rápido e mandar fotos no WhatsApp.</Vazio>}
-      {produtos.map((p) => (
-        <div className="cartao produto" key={p.id}>
-          {p.foto_url && <img src={p.foto_url} alt={p.nome} />}
-          <div>
-            <h3>{p.nome}</h3>
-            <p className="preco">{dinheiro(p.preco)}</p>
-            {p.descricao && <p>{p.descricao}</p>}
-          </div>
-          <Botao variante="whatsapp" onClick={() => compartilhar(p)}>
-            Enviar no WhatsApp
-          </Botao>
-          <Botao variante="secundario" onClick={() => editar(p.id)}>
-            ✏️ Editar
-          </Botao>
+      <Topo
+        titulo="Catálogo"
+        subtitulo={produtos.length ? `${produtos.length} ${produtos.length === 1 ? 'produto' : 'produtos'}` : undefined}
+      />
+      <Botao icone={<IconeMais />} onClick={() => editar('novo')}>
+        Novo produto
+      </Botao>
+      {produtos.length === 0 && (
+        <Vazio titulo="Nenhum produto ainda">Com o catálogo pronto, você vende mais rápido e manda fotos no WhatsApp.</Vazio>
+      )}
+      {produtos.length > 0 && (
+        <div className="painel">
+          {produtos.map((p) => (
+            <div className="produto-linha" key={p.id}>
+              <button type="button" className="produto-abrir" onClick={() => editar(p.id)}>
+                {p.foto_url ? (
+                  <img src={p.foto_url} alt="" className="produto-miniatura" />
+                ) : (
+                  <span className="produto-miniatura produto-sem-foto">{p.nome.charAt(0)}</span>
+                )}
+                <span className="linha-texto">
+                  <span className="linha-titulo">{p.nome}</span>
+                  <span className="produto-preco">{dinheiro(p.preco)}</span>
+                  {p.recompra_dias && <span className="linha-detalhe">Lembrar de repor em {p.recompra_dias} dias</span>}
+                </span>
+              </button>
+              <button type="button" className="botao-redondo" onClick={() => compartilhar(p)} aria-label={`Enviar ${p.nome} no WhatsApp`}>
+                <IconeWhatsapp />
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+      {produtos.length > 0 && <p className="campo-dica">Toque no produto para editar, ou no ícone verde para enviar.</p>}
     </>
   )
 }
@@ -86,7 +102,7 @@ function FormProduto({ id, userId, voltar }: { id?: string; userId: string; volt
     try {
       setFoto(await enviarFoto(arquivo, userId))
     } catch {
-      setErro('Não consegui enviar a foto. Tente de novo.')
+      setErro('Não foi possível enviar a foto. Tente de novo.')
     } finally {
       setEnviandoFoto(false)
     }
@@ -104,7 +120,7 @@ function FormProduto({ id, userId, voltar }: { id?: string; userId: string; volt
     const { error } = id
       ? await supabase.from('produtos').update(dados).eq('id', id)
       : await supabase.from('produtos').insert(dados)
-    if (error) return setErro('Não consegui salvar. Confira a internet e tente de novo.')
+    if (error) return setErro('Não foi possível salvar. Confira a internet e tente de novo.')
     await recarregar()
     voltar()
   }
@@ -112,7 +128,7 @@ function FormProduto({ id, userId, voltar }: { id?: string; userId: string; volt
   async function excluir() {
     if (!id || !confirm(`Apagar ${nome} do catálogo?`)) return
     const { error } = await supabase.from('produtos').delete().eq('id', id)
-    if (error) return setErro('Não consegui apagar. Tente de novo.')
+    if (error) return setErro('Não foi possível apagar. Tente de novo.')
     await recarregar()
     voltar()
   }
@@ -125,7 +141,7 @@ function FormProduto({ id, userId, voltar }: { id?: string; userId: string; volt
       <Topo titulo={id ? 'Editar produto' : 'Novo produto'} voltar={voltar} />
       <form className="formulario" onSubmit={salvar}>
         <label className="foto-campo">
-          {foto ? <img src={foto} alt="" /> : <span className="foto-vazia">📷</span>}
+          {foto ? <img src={foto} alt="" /> : <span className="foto-vazia"><IconeCamera /></span>}
           <span className="botao botao-secundario">{enviandoFoto ? 'Enviando…' : foto ? 'Trocar foto' : 'Colocar foto'}</span>
           <input type="file" accept="image/*" hidden onChange={(e) => escolherFoto(e.target.files?.[0])} />
         </label>
@@ -148,7 +164,7 @@ function FormProduto({ id, userId, voltar }: { id?: string; userId: string; volt
           Salvar
         </Botao>
         {id && (
-          <Botao variante="perigo" onClick={excluir}>
+          <Botao variante="perigo" icone={<IconeLixo />} onClick={excluir}>
             Apagar produto
           </Botao>
         )}
