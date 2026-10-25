@@ -166,113 +166,127 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
         voltar={clienteInicial ? undefined : () => setClienteId(null)}
       />
 
-      {produtos.length === 0 && (
-        <Vazio titulo="Catálogo vazio">Cadastre produtos no Catálogo, ou digite o produto logo abaixo.</Vazio>
-      )}
-      <div className="grade-produtos">
-        {produtos.map((p) => {
-          const qtd = quantidadeDe(p.id)
-          return (
-            <button
-              type="button"
-              key={p.id}
-              className={`produto-botao ${qtd ? 'produto-escolhido' : ''}`}
-              onClick={() => adicionar({ produtoId: p.id, nome: p.nome, preco: p.preco, recompraDias: p.recompra_dias })}
-            >
-              {p.foto_url ? <img src={p.foto_url} alt="" /> : <span className="produto-sem-foto">{p.nome.charAt(0)}</span>}
-              <span className="produto-nome">{p.nome}</span>
-              <span className="produto-preco">{dinheiro(p.preco)}</span>
-              {qtd > 0 && <span className="produto-qtd">{qtd}</span>}
-            </button>
-          )
-        })}
-      </div>
+      {/* No computador, o resumo e o pagamento ficam ao lado dos produtos. */}
+      <div className="venda-colunas">
+        <div className="venda-produtos">
+          {produtos.length === 0 && (
+            <Vazio titulo="Catálogo vazio">Cadastre produtos no Catálogo, ou digite o produto logo abaixo.</Vazio>
+          )}
+          <div className="grade-produtos">
+            {produtos.map((p) => {
+              const qtd = quantidadeDe(p.id)
+              return (
+                <button
+                  type="button"
+                  key={p.id}
+                  className={`produto-botao ${qtd ? 'produto-escolhido' : ''}`}
+                  onClick={() => adicionar({ produtoId: p.id, nome: p.nome, preco: p.preco, recompraDias: p.recompra_dias })}
+                >
+                  {p.foto_url ? <img src={p.foto_url} alt="" /> : <span className="produto-sem-foto">{p.nome.charAt(0)}</span>}
+                  <span className="produto-nome">{p.nome}</span>
+                  <span className="produto-preco">{dinheiro(p.preco)}</span>
+                  {qtd > 0 && <span className="produto-qtd">{qtd}</span>}
+                </button>
+              )
+            })}
+          </div>
 
-      <details className="avulso">
-        <summary>
-          <IconeMais /> Produto fora do catálogo
-        </summary>
-        <div className="avulso-campos">
-          <Campo rotulo="Nome" value={avulso.nome} onChange={(e) => setAvulso({ ...avulso, nome: e.target.value })} />
-          <Campo
-            rotulo="Preço"
-            inputMode="decimal"
-            value={avulso.preco}
-            onChange={(e) => setAvulso({ ...avulso, preco: e.target.value })}
-            placeholder="49,90"
-          />
-          <Botao
-            variante="secundario"
-            disabled={!avulso.nome.trim() || lerDinheiro(avulso.preco) <= 0}
-            onClick={() => {
-              adicionar({ produtoId: null, nome: avulso.nome.trim(), preco: lerDinheiro(avulso.preco), recompraDias: null })
-              setAvulso({ nome: '', preco: '' })
-            }}
-          >
-            Adicionar à venda
-          </Botao>
-        </div>
-      </details>
-
-      {linhas.length > 0 && (
-        <>
-          <Secao titulo="Resumo">
-            {linhas.map((l, i) => (
-              <div className="linha-venda" key={i}>
-                <span className="linha-texto">
-                  <span className="linha-titulo">{l.nome}</span>
-                  <span className="linha-detalhe">{dinheiro(l.preco * l.quantidade)}</span>
-                </span>
-                <span className="quantidade">
-                  <button type="button" onClick={() => mudarQuantidade(i, -1)} aria-label={`Tirar um ${l.nome}`}>
-                    <IconeMenos />
-                  </button>
-                  <strong aria-live="polite">{l.quantidade}</strong>
-                  <button type="button" onClick={() => mudarQuantidade(i, 1)} aria-label={`Mais um ${l.nome}`}>
-                    <IconeMais />
-                  </button>
-                </span>
-              </div>
-            ))}
-            <div className="total">
-              <span>Total</span>
-              <strong>{dinheiro(total)}</strong>
-            </div>
-          </Secao>
-
-          <section className="secao">
-            <h2>Pagamento</h2>
-            <div className="formulario">
-              <label className="campo">
-                <span className="campo-rotulo">Forma</span>
-                <select value={vezes} onChange={(e) => setVezes(Number(e.target.value))}>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      {n === 1 ? 'À vista' : `${n}x de ${dinheiro(total / n)}`}
-                    </option>
-                  ))}
-                </select>
-              </label>
+          <details className="avulso">
+            <summary>
+              <IconeMais /> Produto fora do catálogo
+            </summary>
+            <div className="avulso-campos">
+              <Campo rotulo="Nome" value={avulso.nome} onChange={(e) => setAvulso({ ...avulso, nome: e.target.value })} />
               <Campo
-                rotulo={vezes === 1 ? 'Data do pagamento' : 'Data da 1ª parcela'}
-                inputMode="numeric"
-                value={primeiroVencimento}
-                onChange={(e) => setPrimeiroVencimento(e.target.value)}
-                dica={vezes > 1 ? 'As outras parcelas vencem no mesmo dia dos meses seguintes.' : undefined}
+                rotulo="Preço"
+                inputMode="decimal"
+                value={avulso.preco}
+                onChange={(e) => setAvulso({ ...avulso, preco: e.target.value })}
+                placeholder="49,90"
               />
-              <label className="checkbox">
-                <input type="checkbox" checked={recebiPrimeira} onChange={(e) => setRecebiPrimeira(e.target.checked)} />
-                {vezes === 1 ? 'Já recebi o pagamento' : 'Já recebi a 1ª parcela'}
-              </label>
+              <Botao
+                variante="secundario"
+                disabled={!avulso.nome.trim() || lerDinheiro(avulso.preco) <= 0}
+                onClick={() => {
+                  adicionar({
+                    produtoId: null,
+                    nome: avulso.nome.trim(),
+                    preco: lerDinheiro(avulso.preco),
+                    recompraDias: null,
+                  })
+                  setAvulso({ nome: '', preco: '' })
+                }}
+              >
+                Adicionar à venda
+              </Botao>
             </div>
-          </section>
+          </details>
+        </div>
 
-          {erro && <Aviso>{erro}</Aviso>}
-          <Botao onClick={salvar} disabled={salvando}>
-            {salvando ? 'Salvando…' : `Salvar venda de ${dinheiro(total)}`}
-          </Botao>
-        </>
-      )}
+        {linhas.length === 0 ? (
+          <div className="venda-resumo venda-resumo-vazio">
+            <Vazio titulo="Nenhum produto ainda">Toque nos produtos ao lado. O total e o pagamento aparecem aqui.</Vazio>
+          </div>
+        ) : (
+          <div className="venda-resumo">
+            <Secao titulo="Resumo">
+              {linhas.map((l, i) => (
+                <div className="linha-venda" key={i}>
+                  <span className="linha-texto">
+                    <span className="linha-titulo">{l.nome}</span>
+                    <span className="linha-detalhe">{dinheiro(l.preco * l.quantidade)}</span>
+                  </span>
+                  <span className="quantidade">
+                    <button type="button" onClick={() => mudarQuantidade(i, -1)} aria-label={`Tirar um ${l.nome}`}>
+                      <IconeMenos />
+                    </button>
+                    <strong aria-live="polite">{l.quantidade}</strong>
+                    <button type="button" onClick={() => mudarQuantidade(i, 1)} aria-label={`Mais um ${l.nome}`}>
+                      <IconeMais />
+                    </button>
+                  </span>
+                </div>
+              ))}
+              <div className="total">
+                <span>Total</span>
+                <strong>{dinheiro(total)}</strong>
+              </div>
+            </Secao>
+
+            <section className="secao">
+              <h2>Pagamento</h2>
+              <div className="formulario">
+                <label className="campo">
+                  <span className="campo-rotulo">Forma</span>
+                  <select value={vezes} onChange={(e) => setVezes(Number(e.target.value))}>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={n}>
+                        {n === 1 ? 'À vista' : `${n}x de ${dinheiro(total / n)}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <Campo
+                  rotulo={vezes === 1 ? 'Data do pagamento' : 'Data da 1ª parcela'}
+                  inputMode="numeric"
+                  value={primeiroVencimento}
+                  onChange={(e) => setPrimeiroVencimento(e.target.value)}
+                  dica={vezes > 1 ? 'As outras parcelas vencem no mesmo dia dos meses seguintes.' : undefined}
+                />
+                <label className="checkbox">
+                  <input type="checkbox" checked={recebiPrimeira} onChange={(e) => setRecebiPrimeira(e.target.checked)} />
+                  {vezes === 1 ? 'Já recebi o pagamento' : 'Já recebi a 1ª parcela'}
+                </label>
+              </div>
+            </section>
+
+            {erro && <Aviso>{erro}</Aviso>}
+            <Botao onClick={salvar} disabled={salvando}>
+              {salvando ? 'Salvando…' : `Salvar venda de ${dinheiro(total)}`}
+            </Botao>
+          </div>
+        )}
+      </div>
     </>
   )
 }

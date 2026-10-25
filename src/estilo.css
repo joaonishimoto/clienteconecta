@@ -3,6 +3,7 @@
   O azul vem só de --marca, para trocar de empresa sem mexer no resto.
   Letra Figtree: simples, arredondada na medida e fácil de ler no celular; títulos pesados como o logo.
   Verde só no ícone do WhatsApp e vermelho só no que está atrasado.
+  No celular, abas embaixo; no computador (a partir de 1024px), menu azul ao lado, que dá para recolher.
 */
 :root {
   --marca: #003884;
@@ -85,6 +86,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .aba-icone svg { width: 25px; height: 25px; }
 .abas button.ativa { color: var(--marca); }
 .abas button.ativa .aba-icone { background: var(--marca); color: #fff; }
+
+/* Menu lateral: escondido no celular, aparece no computador (ver o fim do arquivo) */
+.lateral { display: none; }
+.venda-colunas, .venda-produtos, .venda-resumo { display: flex; flex-direction: column; gap: 1.1rem; }
+.venda-resumo-vazio { display: none; }
 
 /* Títulos */
 .topo { display: flex; flex-direction: column; gap: 0.3rem; }
@@ -394,6 +400,95 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes balancar { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 @keyframes girar { to { transform: rotate(360deg); } }
 @keyframes pulsar { from { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.08); } }
+
+/* Computador: menu azul ao lado no lugar das abas, conteúdo mais largo e com colunas */
+@media (min-width: 1024px) {
+  .app {
+    --lateral: 272px;
+    max-width: none; padding-bottom: 0;
+    display: grid; grid-template-columns: var(--lateral) minmax(0, 1fr); align-items: start;
+    transition: grid-template-columns 0.2s ease;
+  }
+  .app-recolhido { --lateral: 104px; }
+  .cabecalho, .abas { display: none; }
+
+  .lateral {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 0.4rem; padding: 1.25rem 0.85rem 1rem;
+    background: repeating-radial-gradient(circle at -60% 108%, transparent 0 22px, rgba(255, 255, 255, 0.06) 22px 24px), var(--marca);
+    color: #fff;
+  }
+  .lateral-marca {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.25rem 0.5rem 1.25rem; margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    font-weight: 800; font-size: 1.2rem; letter-spacing: 0.01em; line-height: 1.2;
+  }
+  .lateral-marca img { flex: none; border-radius: var(--raio-pequeno); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.5); }
+  .lateral-nome { overflow-wrap: anywhere; }
+
+  .lateral-abas { display: flex; flex-direction: column; gap: 0.35rem; }
+  .lateral-abas button, .lateral-conta, .lateral-recolher {
+    display: flex; align-items: center; gap: 0.9rem; width: 100%; min-height: 60px; padding: 0.5rem 0.9rem;
+    background: none; border: none; border-radius: var(--raio-pequeno); text-align: left;
+    font-weight: 700; font-size: 1.05rem; color: #dbe6f6;
+    transition: background-color 0.15s, color 0.15s;
+  }
+  .lateral-abas svg { flex: none; width: 26px; height: 26px; }
+  .lateral-abas button:hover, .lateral-conta:hover, .lateral-recolher:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+  .lateral-abas button.ativa, .lateral-conta.ativa {
+    background: #fff; color: var(--marca); box-shadow: 0 2px 0 var(--marca-forte), 0 4px 12px rgba(0, 20, 60, 0.25);
+  }
+  .lateral :focus-visible { outline-color: #fff; }
+
+  .lateral-conta { margin-top: auto; padding: 0.55rem 0.7rem; }
+  .lateral-conta .avatar { width: 44px; height: 44px; background: #fff; color: var(--marca); font-size: 0.95rem; }
+  .lateral-conta.ativa .avatar { background: var(--marca); color: #fff; }
+  .lateral-conta-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+  .lateral-conta-texto strong { color: inherit; overflow-wrap: anywhere; }
+  .lateral-conta-texto span { font-size: 0.85rem; font-weight: 600; opacity: 0.8; }
+
+  .lateral-recolher { min-height: 52px; font-size: 0.95rem; font-weight: 600; border-top: 1px solid rgba(255, 255, 255, 0.16); border-radius: 0 0 var(--raio-pequeno) var(--raio-pequeno); }
+  .lateral-recolher svg { flex: none; transition: transform 0.2s; }
+
+  /* Recolhido: só o ícone, com o nome pequeno embaixo para ela não precisar adivinhar */
+  .app-recolhido .lateral { padding-left: 0.6rem; padding-right: 0.6rem; }
+  .app-recolhido .lateral-marca { justify-content: center; padding-left: 0; padding-right: 0; }
+  .app-recolhido .lateral-nome, .app-recolhido .lateral-conta-texto { display: none; }
+  .app-recolhido .lateral-abas button, .app-recolhido .lateral-recolher {
+    flex-direction: column; justify-content: center; gap: 0.3rem; min-height: 72px; padding: 0.5rem 0.25rem;
+    font-size: 0.82rem; text-align: center;
+  }
+  .app-recolhido .lateral-conta { justify-content: center; padding: 0.55rem 0; }
+  .app-recolhido .lateral-recolher svg { transform: scaleX(-1); }
+
+  /* Conteúdo */
+  .conteudo { width: 100%; max-width: 1120px; margin: 0 auto; padding: 2rem 3rem 3.5rem; gap: 1.35rem; }
+  .conteudo > .botao { width: auto; align-self: flex-start; padding: 0.7rem 1.75rem; }
+  .formulario, .painel-acoes { max-width: 640px; }
+  .secao-texto, .campo-dica { max-width: 68ch; }
+  h1 { font-size: 1.9rem; }
+
+  .hoje-topo { margin: 0; padding: 1.5rem 1.75rem 1.75rem; border-radius: var(--raio); box-shadow: var(--sombra); }
+  .hoje-data { font-size: 2.3rem; }
+  .hoje-contas { max-width: 680px; gap: 0.75rem; }
+  .hoje-contas li { padding: 0.75rem 0.95rem; font-size: 0.95rem; }
+  .hoje-contas strong { font-size: 1.9rem; }
+  .cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 0.85rem; align-items: start; }
+
+  .grade-produtos { grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); }
+  .venda-colunas { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 1.75rem; align-items: start; }
+  .venda-resumo { position: sticky; top: 2rem; }
+  .venda-resumo-vazio { display: flex; }
+  .concluida { max-width: 480px; margin: 0 auto; width: 100%; }
+
+  .linha-clicavel:hover, .produto-abrir:hover { background: var(--marca-clara); }
+  .produto-botao:hover { border-color: var(--marca-linha); }
+  .produto-escolhido:hover { border-color: var(--marca); }
+  .botao-principal:hover { background: var(--marca-forte); }
+  .botao-secundario:hover, .botao-leve:hover, .botao-pequeno:hover, .quantidade button:hover { background: var(--marca-clara); border-color: var(--marca-media); }
+  .botao-whatsapp-icone:hover { background: var(--ok-claro); border-color: #b7dcc5; }
+  .painel-acao:hover { background: var(--marca-clara); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before { transition: none !important; animation: none !important; }
