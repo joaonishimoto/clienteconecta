@@ -4,6 +4,9 @@ import { Aviso, Botao, Campo } from '../componentes'
 
 type Modo = 'entrar' | 'cadastrar' | 'esqueci'
 
+// O botão do Google só aparece depois que o provedor for ativado no Supabase.
+const GOOGLE_ATIVO = import.meta.env.VITE_LOGIN_GOOGLE === 'true'
+
 export function Entrar() {
   const [modo, setModo] = useState<Modo>('entrar')
   const [nome, setNome] = useState('')
@@ -59,7 +62,7 @@ export function Entrar() {
         <p>Suas clientes, vendas e lembretes num lugar só.</p>
       </div>
 
-      {modo !== 'esqueci' && (
+      {GOOGLE_ATIVO && modo !== 'esqueci' && (
         <>
           <Botao variante="secundario" className="botao-google" onClick={google}>
             <img src="/google.svg" alt="" width={24} height={24} /> Entrar com Google

@@ -27,6 +27,7 @@ Em "Minha conta" ficam o nome, a marca, a importação e exportação de planilh
 1. No [Google Cloud Console](https://console.cloud.google.com), crie uma credencial **OAuth client ID** do tipo **Web application**.
 2. Em **Authorized redirect URIs**, coloque `https://SEU-PROJETO.supabase.co/auth/v1/callback`.
 3. No Supabase, em **Authentication → Providers → Google**, ative e cole o Client ID e o Client Secret.
+4. Na Vercel, crie a variável `VITE_LOGIN_GOOGLE=true` e faça um novo deploy. Sem ela, o botão "Entrar com Google" fica escondido.
 
 ### 3. Vercel
 
