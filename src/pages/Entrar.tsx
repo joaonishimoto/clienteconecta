@@ -123,8 +123,10 @@ export function Entrar() {
   return (
     <div className="entrar">
       <header className="entrar-faixa">
-        <img src="/icone.svg" alt="" width={56} height={56} />
-        <p className="entrar-produto">ClienteConecta</p>
+        <p className="entrar-marca">
+          <img src="/icone.svg" alt="" width={36} height={36} />
+          ClienteConecta
+        </p>
         <p className="entrar-promessa">Suas clientes, vendas e lembretes num lugar só.</p>
       </header>
 
@@ -320,8 +322,10 @@ export function NovaSenha({ pronto }: { pronto: () => void }) {
   return (
     <div className="entrar">
       <header className="entrar-faixa">
-        <img src="/icone.svg" alt="" width={56} height={56} />
-        <p className="entrar-produto">ClienteConecta</p>
+        <p className="entrar-marca">
+          <img src="/icone.svg" alt="" width={36} height={36} />
+          ClienteConecta
+        </p>
       </header>
       <main className="entrar-folha">
         <div className="entrar-conteudo">
