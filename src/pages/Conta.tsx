@@ -5,6 +5,7 @@ import { baixar, clientesParaCsv, lerArquivo, lerClientes, lerProdutos, produtos
 import { hojeISO } from '../lib/formato'
 import { Aviso, Botao, Campo, Topo } from '../componentes'
 import { IconeBaixar, IconeSair, IconeSubir } from '../icones'
+import { IndiqueEGanhe, MinhaAssinatura } from './Assinatura'
 
 export function Conta({ userId, fechar }: { userId: string; fechar: () => void }) {
   const { perfil, clientes, produtos, recarregar } = useDados()
@@ -63,6 +64,9 @@ export function Conta({ userId, fechar }: { userId: string; fechar: () => void }
       </form>
 
       {aviso && <Aviso tipo={aviso.tipo}>{aviso.texto}</Aviso>}
+
+      <MinhaAssinatura />
+      <IndiqueEGanhe />
 
       <section className="secao">
         <h2>Planilhas</h2>

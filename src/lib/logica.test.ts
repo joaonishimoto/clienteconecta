@@ -4,6 +4,7 @@ import { linkWhatsapp, mostrarTelefone, normalizarWhatsapp } from './whatsapp'
 import { montarLembretes } from './lembretes'
 import { clientesParaCsv, lerClientes, lerProdutos } from './planilha'
 import type { Cliente, Parcela, Venda, VendaItem } from './tipos'
+import { podeUsarConvite, progresso, situacao } from './assinatura'
 
 describe('formato', () => {
   it('formata data e telefone enquanto ela digita', () => {
@@ -114,5 +115,46 @@ describe('mensagens de erro do login', () => {
     expect(mensagemDeErro({ code: 'over_email_send_rate_limit', status: 429 })).toContain('Espere um minuto')
     expect(mensagemDeErro({ code: 'qualquer' })).toContain('Algo deu errado')
     expect(mensagemDeErro(null)).toBe('')
+  })
+})
+
+describe('assinatura', () => {
+  const base = {
+    codigo: 'K7P2MX',
+    indicada_por: null,
+    meses_ganhos: 0,
+    assinatura_status: null,
+    criado_em: '2026-10-01T12:00:00Z',
+  }
+  const agora = new Date('2026-10-10T12:00:00Z')
+
+  it('mostra teste, vencendo, vencida e bloqueada pela data', () => {
+    expect(situacao({ ...base, pago_ate: '2026-10-15T12:00:00Z' }, agora).tipo).toBe('teste')
+    expect(situacao({ ...base, pago_ate: '2026-10-12T12:00:00Z' }, agora).tipo).toBe('vencendo')
+    expect(situacao({ ...base, pago_ate: '2026-10-09T12:00:00Z' }, agora).tipo).toBe('vencida')
+    expect(situacao({ ...base, pago_ate: '2026-10-06T12:00:00Z' }, agora).tipo).toBe('bloqueada')
+    expect(situacao({ ...base, pago_ate: '2026-11-20T12:00:00Z' }, agora).tipo).toBe('em-dia')
+  })
+
+  it('no cartão não avisa que vai vencer, porque renova sozinha', () => {
+    const s = situacao({ ...base, assinatura_status: 'active', pago_ate: '2026-10-12T12:00:00Z' }, agora)
+    expect(s).toEqual({ tipo: 'em-dia', dias: 2, cartao: true })
+  })
+
+  it('conta as amigas até o próximo mês grátis', () => {
+    const v = { status: 'valida', premiada: false } as const
+    const p = { status: 'pendente', premiada: false } as const
+    const premiada = { status: 'valida', premiada: true } as const
+    expect(progresso([premiada, premiada, premiada, v, p, p, { status: 'anulada', premiada: false }])).toEqual({
+      valendo: 1,
+      esperando: 2,
+    })
+  })
+
+  it('aceita convite só nos primeiros 7 dias e uma vez', () => {
+    const a = { ...base, pago_ate: '2026-10-15T12:00:00Z' }
+    expect(podeUsarConvite(a, new Date('2026-10-05T12:00:00Z'))).toBe(true)
+    expect(podeUsarConvite(a, new Date('2026-10-09T12:00:00Z'))).toBe(false)
+    expect(podeUsarConvite({ ...a, indicada_por: 'x' }, new Date('2026-10-02T12:00:00Z'))).toBe(false)
   })
 })
