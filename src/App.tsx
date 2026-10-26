@@ -10,6 +10,8 @@ import { Catalogo } from './pages/Catalogo'
 import { Conta } from './pages/Conta'
 import { Avatar, Aviso } from './componentes'
 import { primeiroNome } from './lib/formato'
+import { conviteGuardado, esquecerConvite, situacao } from './lib/assinatura'
+import { usarConvite } from './lib/pagamento'
 import { IconeCatalogo, IconeClientes, IconeHoje, IconeRecolher, IconeVender } from './icones'
 
 export type Aba = 'hoje' | 'clientes' | 'vender' | 'catalogo'
@@ -46,7 +48,7 @@ export default function App() {
 }
 
 function Principal({ userId }: { userId: string }) {
-  const { perfil, carregando, erro } = useDados()
+  const { perfil, assinatura, carregando, erro, recarregar } = useDados()
   const [aba, setAba] = useState<Aba>('hoje')
   const [contaAberta, setContaAberta] = useState(false)
   // Permite abrir "Vender" já com a cliente escolhida (a partir da ficha da cliente).
@@ -55,6 +57,30 @@ function Principal({ userId }: { userId: string }) {
   const [toque, setToque] = useState(0)
   // No computador o menu fica ao lado; ela pode recolher e o app lembra da escolha.
   const [recolhido, setRecolhido] = useState(() => lerPreferencia('menu-recolhido'))
+  // Volta do Stripe com ?assinatura=ok: avisa e confere de novo, porque o aviso do pagamento leva alguns segundos.
+  const [voltouDoPagamento] = useState(() => new URLSearchParams(window.location.search).get('assinatura') === 'ok')
+
+  useEffect(() => {
+    if (!voltouDoPagamento) return
+    window.history.replaceState(null, '', window.location.pathname)
+    const t = setTimeout(recarregar, 5000)
+    return () => clearTimeout(t)
+  }, [voltouDoPagamento, recarregar])
+
+  // Quem chegou por um link de convite fica ligada à amiga que indicou, logo na primeira entrada.
+  useEffect(() => {
+    const codigo = conviteGuardado()
+    if (!codigo || !assinatura) return
+    if (assinatura.indicada_por) return esquecerConvite()
+    usarConvite(codigo)
+      .then(() => {
+        esquecerConvite()
+        return recarregar()
+      })
+      .catch(() => {
+        // Sem internet: tenta de novo na próxima vez que abrir o app.
+      })
+  }, [assinatura, recarregar])
 
   const alternarMenu = () => {
     setRecolhido((r) => {
@@ -77,6 +103,15 @@ function Principal({ userId }: { userId: string }) {
   }
 
   const empresa = perfil?.empresa || 'ClienteConecta'
+  const conta = assinatura ? situacao(assinatura) : null
+  const avisoConta =
+    conta?.tipo === 'bloqueada'
+      ? 'Sua assinatura venceu. Seus dados estão guardados, mas para anotar coisas novas é preciso assinar.'
+      : conta?.tipo === 'vencida'
+        ? 'Sua assinatura venceu. Assine para não parar de anotar.'
+        : conta?.tipo === 'vencendo'
+          ? `Sua assinatura vence em ${conta.dias} ${conta.dias === 1 ? 'dia' : 'dias'}.`
+          : null
 
   return (
     <div className={`app ${recolhido ? 'app-recolhido' : ''}`}>
@@ -133,6 +168,15 @@ function Principal({ userId }: { userId: string }) {
 
       <main className="conteudo">
         {erro && <Aviso>{erro}</Aviso>}
+        {voltouDoPagamento && <Aviso tipo="ok">Pagamento recebido, obrigada! Pode levar um minutinho para aparecer.</Aviso>}
+        {avisoConta && !contaAberta && (
+          <div className={`aviso ${conta?.tipo === 'vencendo' ? 'aviso-alerta' : 'aviso-erro'} aviso-com-acao`} role="status">
+            <span>{avisoConta}</span>
+            <button type="button" onClick={() => setContaAberta(true)}>
+              Assinar
+            </button>
+          </div>
+        )}
         {carregando ? (
           <p className="carregando">Carregando seus dados…</p>
         ) : contaAberta ? (

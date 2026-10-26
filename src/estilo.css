@@ -229,6 +229,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .aviso { padding: 0.8rem 1rem; border-radius: var(--raio-pequeno); font-weight: 600; }
 .aviso-erro { background: var(--perigo-claro); color: var(--perigo); }
 .aviso-ok { background: var(--ok-claro); color: var(--ok); }
+.aviso-alerta { background: var(--alerta-claro); color: var(--alerta); }
 .vazio {
   text-align: center; padding: 2rem 1.5rem; color: var(--texto-suave);
   background: var(--painel); border-radius: var(--raio); box-shadow: var(--sombra);
@@ -593,4 +594,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before { transition: none !important; animation: none !important; }
   .carregando-botao::before { display: none; }
+}
+
+/* Indique e ganhe: contagem até o próximo mês grátis e o link para mandar */
+.indique { padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.7rem; }
+.indique-conta strong { font-size: 1.3rem; color: var(--marca-forte); }
+.indique-barra { height: 12px; border-radius: 6px; background: var(--marca-clara); overflow: hidden; }
+.indique-barra span { display: block; height: 100%; background: var(--marca); border-radius: 6px; transition: width 0.3s; }
+.indique-ganhos { display: flex; align-items: center; gap: 0.4rem; color: var(--ok); font-weight: 700; }
+.indique-link {
+  padding: 0.6rem 0.8rem; border-radius: var(--raio-pequeno); background: var(--fundo); font-weight: 600;
+  color: var(--texto-suave); overflow-wrap: anywhere; user-select: all;
 }
