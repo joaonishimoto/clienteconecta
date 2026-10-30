@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useDados } from '../lib/dados'
 import type { Produto } from '../lib/tipos'
-import { dinheiro, lerDinheiro } from '../lib/formato'
+import { dinheiro, iniciais, lerDinheiro } from '../lib/formato'
 import { enviarFoto } from '../lib/foto'
 import { abrirWhatsapp } from '../lib/whatsapp'
 import { Aviso, Botao, Campo, Topo, Vazio } from '../componentes'
@@ -31,10 +31,12 @@ function Lista({ editar }: { editar: (id: string) => void }) {
       <Topo
         titulo="Catálogo"
         subtitulo={produtos.length ? `${produtos.length} ${produtos.length === 1 ? 'produto' : 'produtos'}` : undefined}
+        acao={
+          <Botao icone={<IconeMais />} onClick={() => editar('novo')}>
+            Novo produto
+          </Botao>
+        }
       />
-      <Botao icone={<IconeMais />} onClick={() => editar('novo')}>
-        Novo produto
-      </Botao>
       {produtos.length === 0 && (
         <Vazio titulo="Nenhum produto ainda">Com o catálogo pronto, você vende mais rápido e manda fotos no WhatsApp.</Vazio>
       )}
@@ -46,7 +48,7 @@ function Lista({ editar }: { editar: (id: string) => void }) {
                 {p.foto_url ? (
                   <img src={p.foto_url} alt="" className="produto-miniatura" />
                 ) : (
-                  <span className="produto-miniatura produto-sem-foto">{p.nome.charAt(0)}</span>
+                  <span className="produto-miniatura produto-sem-foto">{iniciais(p.nome)}</span>
                 )}
                 <span className="linha-texto">
                   <span className="linha-titulo">{p.nome}</span>

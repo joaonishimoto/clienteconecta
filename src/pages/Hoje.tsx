@@ -4,7 +4,7 @@ import { useDados } from '../lib/dados'
 import { montarLembretes, type Lembrete } from '../lib/lembretes'
 import { diaMes, dinheiro, hojeISO, primeiroNome } from '../lib/formato'
 import { abrirWhatsapp } from '../lib/whatsapp'
-import { Avatar, Aviso, Botao, BotaoWhatsapp, Vazio } from '../componentes'
+import { Avatar, Aviso, BotaoWhatsapp, Vazio } from '../componentes'
 import { IconeBolo, IconeCheck, IconeMoeda, IconeRepor } from '../icones'
 
 export function Hoje() {
@@ -31,28 +31,35 @@ export function Hoje() {
   const hora = agora.getHours()
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
   const nome = perfil?.nome ? `, ${primeiroNome(perfil.nome)}` : ''
-  const data = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const semana = agora.toLocaleDateString('pt-BR', { weekday: 'long' })
+  const mes = agora.toLocaleDateString('pt-BR', { month: 'long' })
+  const partes = [
+    cobrancas.length && `${cobrancas.length} ${cobrancas.length === 1 ? 'cobrança' : 'cobranças'}`,
+    aniversarios.length && `${aniversarios.length} ${aniversarios.length === 1 ? 'aniversário' : 'aniversários'}`,
+    recompras.length && `${recompras.length} para repor`,
+  ].filter(Boolean)
+  const resumo = partes.length
+    ? `Para hoje: ${partes.length > 1 ? partes.slice(0, -1).join(', ') + ' e ' + partes[partes.length - 1] : partes[0]}.`
+    : 'Nada pendente para hoje.'
 
   return (
     <>
-      {/* Faixa azul da marca com o dia e o resumo do que espera por ela hoje. */}
+      {/* A folhinha do dia, como a do calendário de parede, e o resumo do que espera por ela. */}
       <header className="hoje-topo">
-        <p className="hoje-saudacao">
-          {saudacao}
-          {nome}
-        </p>
-        <h1 className="hoje-data">{data.charAt(0).toUpperCase() + data.slice(1)}</h1>
-        <ul className="hoje-contas" aria-label="Resumo de hoje">
-          <li>
-            <strong>{cobrancas.length}</strong> {cobrancas.length === 1 ? 'cobrança' : 'cobranças'}
-          </li>
-          <li>
-            <strong>{aniversarios.length}</strong> {aniversarios.length === 1 ? 'aniversário' : 'aniversários'}
-          </li>
-          <li>
-            <strong>{recompras.length}</strong> para repor
-          </li>
-        </ul>
+        <span className="folhinha" aria-hidden>
+          <span className="folhinha-mes">{mes}</span>
+          <span className="folhinha-dia">{agora.getDate()}</span>
+        </span>
+        <div className="hoje-titulo">
+          <p className="topo-sub">
+            {saudacao}
+            {nome}
+          </p>
+          <h1>
+            {semana.charAt(0).toUpperCase() + semana.slice(1)}, {agora.getDate()} de {mes}
+          </h1>
+          <p className="hoje-resumo">{resumo}</p>
+        </div>
       </header>
       {erro && <Aviso>{erro}</Aviso>}
 
@@ -60,6 +67,7 @@ export function Hoje() {
         <Vazio titulo="Tudo em dia">Quando houver cobrança, aniversário ou produto para repor, ele aparece aqui.</Vazio>
       )}
 
+      <div className="hoje-grupos">
       {cobrancas.length > 0 && (
         <Grupo icone={<IconeMoeda />} titulo="Cobranças" tom="cobranca">
           {cobrancas.map(
@@ -70,7 +78,7 @@ export function Hoje() {
                   lembrete={l}
                   detalhe={
                     <>
-                      Parcela {l.parcela.numero} de {l.parcela.de}, <strong>{dinheiro(l.parcela.valor)}</strong>
+                      <strong>{dinheiro(l.parcela.valor)}</strong>, {`parcela\u00a0${l.parcela.numero}\u00a0de\u00a0${l.parcela.de}`}
                       <span className={l.atrasada ? 'selo selo-atrasado' : 'selo selo-hoje'}>
                         {l.atrasada
                           ? `Atrasada desde ${diaMes(l.parcela.vencimento)}`
@@ -81,9 +89,9 @@ export function Hoje() {
                     </>
                   }
                   acao={
-                    <Botao variante="secundario" icone={<IconeCheck />} onClick={() => alterar('parcelas', l.parcela.id, { pago_em: hoje })}>
-                      Recebi
-                    </Botao>
+                    <button type="button" className="botao-pequeno" onClick={() => alterar('parcelas', l.parcela.id, { pago_em: hoje })}>
+                      <IconeCheck /> Recebi
+                    </button>
                   }
                 />
               ),
@@ -128,19 +136,20 @@ export function Hoje() {
                     </>
                   }
                   acao={
-                    <Botao
-                      variante="secundario"
-                      icone={<IconeCheck />}
+                    <button
+                      type="button"
+                      className="botao-pequeno"
                       onClick={() => alterar('venda_itens', l.item.id, { recompra_avisada: true })}
                     >
-                      Já avisei
-                    </Botao>
+                      <IconeCheck /> Já avisei
+                    </button>
                   }
                 />
               ),
           )}
         </Grupo>
       )}
+      </div>
     </>
   )
 }
@@ -152,7 +161,7 @@ function Grupo({ icone, titulo, tom, children }: { icone: ReactNode; titulo: str
         <span className="grupo-icone">{icone}</span>
         {titulo}
       </h2>
-      <div className="cartoes">{children}</div>
+      <div className="painel">{children}</div>
     </section>
   )
 }
@@ -160,18 +169,16 @@ function Grupo({ icone, titulo, tom, children }: { icone: ReactNode; titulo: str
 function Tarefa({ lembrete, detalhe, acao }: { lembrete: Lembrete; detalhe: ReactNode; acao?: ReactNode }) {
   return (
     <article className="tarefa">
-      <div className="tarefa-quem">
-        <Avatar nome={lembrete.cliente.nome} />
-        <div className="tarefa-texto">
-          <p className="tarefa-nome">{lembrete.cliente.nome}</p>
-          <p className="tarefa-detalhe">{detalhe}</p>
-        </div>
-        <BotaoWhatsapp
-          nome={lembrete.cliente.nome}
-          onClick={() => abrirWhatsapp(lembrete.cliente.whatsapp, lembrete.mensagem)}
-        />
+      <Avatar nome={lembrete.cliente.nome} />
+      <div className="tarefa-texto">
+        <p className="tarefa-nome">{lembrete.cliente.nome}</p>
+        <p className="tarefa-detalhe">{detalhe}</p>
+        {acao && <div className="tarefa-acao">{acao}</div>}
       </div>
-      {acao}
+      <BotaoWhatsapp
+        nome={lembrete.cliente.nome}
+        onClick={() => abrirWhatsapp(lembrete.cliente.whatsapp, lembrete.mensagem)}
+      />
     </article>
   )
 }

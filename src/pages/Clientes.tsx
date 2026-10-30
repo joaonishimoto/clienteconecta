@@ -4,7 +4,7 @@ import { useDados } from '../lib/dados'
 import type { Cliente, Parcela, VendaItem } from '../lib/tipos'
 import { dataBR, diaMes, dinheiro, hojeISO, lerData, mascaraData, mascaraTelefone, primeiroNome, semAcento } from '../lib/formato'
 import { abrirWhatsapp, mostrarTelefone } from '../lib/whatsapp'
-import { Avatar, Aviso, Botao, BotaoWhatsapp, Campo, Linha, Secao, Topo, Vazio } from '../componentes'
+import { Avatar, Aviso, Botao, Campo, Linha, Secao, Topo, Vazio } from '../componentes'
 import { IconeBolo, IconeBusca, IconeCheck, IconeEditar, IconeLixo, IconeMais, IconeVender, IconeVoltar, IconeWhatsapp } from '../icones'
 
 type Tela = { tipo: 'lista' } | { tipo: 'ficha'; id: string } | { tipo: 'form'; id?: string }
@@ -59,10 +59,12 @@ function Lista({ abrir, nova }: { abrir: (id: string) => void; nova: () => void 
       <Topo
         titulo="Clientes"
         subtitulo={clientes.length ? `${clientes.length} ${clientes.length === 1 ? 'cliente' : 'clientes'}` : undefined}
+        acao={
+          <Botao icone={<IconeMais />} onClick={nova}>
+            Nova cliente
+          </Botao>
+        }
       />
-      <Botao icone={<IconeMais />} onClick={nova}>
-        Nova cliente
-      </Botao>
       {clientes.length > 5 && (
         <label className="busca">
           <IconeBusca />
@@ -104,15 +106,14 @@ function Lista({ abrir, nova }: { abrir: (id: string) => void; nova: () => void 
                 key={c.id}
                 inicio={<Avatar nome={c.nome} />}
                 titulo={c.nome}
-                detalhe={
-                  <>
-                    {c.whatsapp ? mostrarTelefone(c.whatsapp) : 'Sem WhatsApp'}
-                    {s && (
-                      <span className={`selo ${s.atrasada ? 'selo-atrasado' : 'selo-hoje'}`}>
-                        {s.atrasada ? 'Atrasada' : 'A receber'}: {dinheiro(s.aberto)}
-                      </span>
-                    )}
-                  </>
+                detalhe={c.whatsapp ? mostrarTelefone(c.whatsapp) : 'Sem WhatsApp'}
+                fim={
+                  s && (
+                    <span className={`valor ${s.atrasada ? 'valor-atrasado' : ''}`}>
+                      {dinheiro(s.aberto)}
+                      <small>{s.atrasada ? 'atrasado' : 'a receber'}</small>
+                    </span>
+                  )
                 }
                 onClick={() => abrir(c.id)}
               />
@@ -165,84 +166,95 @@ function Ficha({ id, voltar, editar, vender }: { id: string; voltar: () => void;
           <IconeEditar /> Editar
         </button>
       </div>
-      <header className="ficha-topo">
-        <Avatar nome={c.nome} />
-        <div className="ficha-nome">
-          <h1>{c.nome}</h1>
-          <p className="topo-sub">{c.whatsapp ? mostrarTelefone(c.whatsapp) : 'Sem WhatsApp'}</p>
-        </div>
-        {c.whatsapp && <BotaoWhatsapp nome={c.nome} onClick={() => abrirWhatsapp(c.whatsapp, `Oi ${nome}, tudo bem?`)} />}
-      </header>
-      {erro && <Aviso>{erro}</Aviso>}
 
-      {compras.length > 0 && (
-        <ul className="ficha-resumo" aria-label="Resumo da cliente">
-          <li>
-            <strong>{dinheiro(totalComprado)}</strong> já comprou
-          </li>
-          <li>
-            <strong>{compras.length}</strong> {compras.length === 1 ? 'compra' : 'compras'}
-          </li>
-          <li>
-            <strong>{diaMes(compras[0].data)}</strong> última compra
-          </li>
-        </ul>
-      )}
+      {/* No computador, os dados da cliente ficam à esquerda e as compras à direita. */}
+      <div className="ficha-colunas">
+        <div className="ficha-lado">
+          <header className="ficha-topo">
+            <Avatar nome={c.nome} />
+            <div className="ficha-nome">
+              <h1>{c.nome}</h1>
+              <p className="topo-sub">{c.whatsapp ? mostrarTelefone(c.whatsapp) : 'Sem WhatsApp'}</p>
+            </div>
+          </header>
 
-      {emAberto > 0 && (
-        <div className={`destaque-receber ${atrasadas.length ? '' : 'destaque-receber-em-dia'}`}>
-          <span className="destaque-receber-texto">
-            {atrasadas.length ? 'Falta receber, com parcela atrasada' : 'Falta receber'}
-            <strong>{dinheiro(emAberto)}</strong>
-          </span>
-          {c.whatsapp && (
-            <button
-              type="button"
-              className="botao-whatsapp-icone"
-              onClick={() => abrirWhatsapp(c.whatsapp, cobranca)}
-              aria-label={`Lembrar ${nome} do pagamento pelo WhatsApp`}
-              title="Lembrar pelo WhatsApp"
-            >
-              <IconeWhatsapp />
-            </button>
+          <div className="ficha-acoes">
+            <Botao icone={<IconeVender />} onClick={() => vender(c.id)}>
+              Nova venda
+            </Botao>
+            {c.whatsapp && (
+              <Botao variante="whatsapp" icone={<IconeWhatsapp />} onClick={() => abrirWhatsapp(c.whatsapp, `Oi ${nome}, tudo bem?`)}>
+                Conversar
+              </Botao>
+            )}
+          </div>
+          {erro && <Aviso>{erro}</Aviso>}
+
+          {emAberto > 0 && (
+            <div className={`destaque-receber ${atrasadas.length ? '' : 'destaque-receber-em-dia'}`}>
+              <span className="destaque-receber-texto">
+                {atrasadas.length ? 'Falta receber, com parcela atrasada' : 'Falta receber'}
+                <strong>{dinheiro(emAberto)}</strong>
+              </span>
+              {c.whatsapp && (
+                <button type="button" className="botao-pequeno" onClick={() => abrirWhatsapp(c.whatsapp, cobranca)}>
+                  <IconeWhatsapp /> Lembrar
+                </button>
+              )}
+            </div>
+          )}
+
+          {compras.length > 0 && (
+            <dl className="ficha-resumo">
+              <div>
+                <dt>Já comprou</dt>
+                <dd>{dinheiro(totalComprado)}</dd>
+              </div>
+              <div>
+                <dt>Compras</dt>
+                <dd>{compras.length}</dd>
+              </div>
+              <div>
+                <dt>Última compra</dt>
+                <dd>{diaMes(compras[0].data)}</dd>
+              </div>
+            </dl>
+          )}
+
+          {(c.aniversario || c.observacao) && (
+            <Secao>
+              {c.aniversario && <Linha inicio={<IconeBolo />} titulo="Aniversário" fim={diaMes(c.aniversario)} />}
+              {c.observacao && <Linha inicio={<IconeEditar />} titulo={c.observacao} />}
+            </Secao>
           )}
         </div>
-      )}
 
-      <Botao icone={<IconeVender />} onClick={() => vender(c.id)}>
-        Nova venda para {nome}
-      </Botao>
+        <div className="ficha-lado">
+          {recebida && (
+            <div className="aviso aviso-ok aviso-com-acao" role="status">
+              <span>Parcela de {dinheiro(recebida.valor)} marcada como recebida.</span>
+              <button type="button" onClick={() => marcar(recebida, null)}>
+                Desfazer
+              </button>
+            </div>
+          )}
 
-      {(c.aniversario || c.observacao) && (
-        <Secao>
-          {c.aniversario && <Linha inicio={<IconeBolo />} titulo="Aniversário" fim={diaMes(c.aniversario)} />}
-          {c.observacao && <Linha inicio={<IconeEditar />} titulo={c.observacao} />}
-        </Secao>
-      )}
-
-      {recebida && (
-        <div className="aviso aviso-ok aviso-com-acao" role="status">
-          <span>Parcela de {dinheiro(recebida.valor)} marcada como recebida.</span>
-          <button type="button" onClick={() => marcar(recebida, null)}>
-            Desfazer
-          </button>
+          <Secao titulo="Compras">
+            {compras.length === 0 && <p className="painel-vazio">Nenhuma compra ainda. Toque em “Nova venda” para registrar a primeira.</p>}
+            {compras.map((v) => (
+              <Compra
+                key={v.id}
+                data={v.data}
+                total={v.total}
+                itens={itens.filter((i) => i.venda_id === v.id)}
+                parcelas={parcelas.filter((p) => p.venda_id === v.id)}
+                hoje={hoje}
+                receber={(p) => marcar(p, hoje)}
+              />
+            ))}
+          </Secao>
         </div>
-      )}
-
-      <Secao titulo="Compras">
-        {compras.length === 0 && <p className="painel-vazio">Nenhuma compra ainda. Toque em “Nova venda” para registrar a primeira.</p>}
-        {compras.map((v) => (
-          <Compra
-            key={v.id}
-            data={v.data}
-            total={v.total}
-            itens={itens.filter((i) => i.venda_id === v.id)}
-            parcelas={parcelas.filter((p) => p.venda_id === v.id)}
-            hoje={hoje}
-            receber={(p) => marcar(p, hoje)}
-          />
-        ))}
-      </Secao>
+      </div>
     </>
   )
 }
@@ -280,7 +292,7 @@ function Compra({
         <>
           {pagas > 0 && (
             <p className="compra-pagas">
-              <IconeCheck /> {pagas} de {parcelas.length} {pagas === 1 ? 'parcela paga' : 'parcelas pagas'}
+              <IconeCheck /> {pagas} de {parcelas.length} parcelas {pagas === 1 ? 'paga' : 'pagas'}
             </p>
           )}
           {faltam.map((p) => {

@@ -100,3 +100,9 @@ export function mascaraTelefone(texto: string): string {
 export function semAcento(t: string): string {
   return t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
 }
+
+/** Iniciais do primeiro e do último nome: "Ana Lúcia Ferreira" vira "AF". */
+export function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/)
+  return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase()
+}
