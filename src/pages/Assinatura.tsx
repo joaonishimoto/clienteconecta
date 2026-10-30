@@ -46,7 +46,7 @@ export function MinhaAssinatura() {
   }
 
   return (
-    <section className="secao">
+    <section className="secao cartao">
       <h2>Minha assinatura</h2>
       <p className="secao-texto">{texto}</p>
       {s.cartao ? (
@@ -109,12 +109,12 @@ export function IndiqueEGanhe() {
   }
 
   return (
-    <section className="secao">
+    <section className="secao cartao">
       <h2>Indique e ganhe</h2>
       <p className="secao-texto">
         A cada {INDICADAS_POR_MES} amigas que assinarem pelo seu link, você ganha 1 mês grátis. Não tem limite.
       </p>
-      <div className="painel indique">
+      <div className="indique">
         <p className="indique-conta">
           <strong>
             {valendo} de {INDICADAS_POR_MES}

@@ -6,6 +6,7 @@ import {
   dataBR,
   dinheiro,
   hojeISO,
+  iniciais,
   lerData,
   lerDinheiro,
   mascaraData,
@@ -199,7 +200,7 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
                   onClick={() => adicionar({ produtoId: p.id, nome: p.nome, preco: p.preco, recompraDias: p.recompra_dias })}
                   aria-label={qtd ? `${p.nome}, ${qtd} na venda. Tocar para somar mais um` : `Adicionar ${p.nome}`}
                 >
-                  {p.foto_url ? <img src={p.foto_url} alt="" /> : <span className="produto-sem-foto">{p.nome.charAt(0)}</span>}
+                  {p.foto_url ? <img src={p.foto_url} alt="" /> : <span className="produto-sem-foto">{iniciais(p.nome)}</span>}
                   <span className="produto-nome">{p.nome}</span>
                   <span className="produto-preco">{dinheiro(p.preco)}</span>
                   {qtd > 0 ? (

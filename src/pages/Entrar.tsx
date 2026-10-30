@@ -238,18 +238,37 @@ export function Entrar() {
   )
 }
 
-/** Fundo azul com as linhas de campo da marca e o cartão branco no meio. */
+/** No computador, a marca à esquerda e o formulário à direita; no celular, só o formulário. */
 function Moldura({ selo, children }: { selo?: ReactNode; children: ReactNode }) {
   return (
     <div className="entrar">
+      <aside className="entrar-lado">
+        <span className="entrar-logo">
+          <img src="/icone.svg" alt="" width={44} height={44} />
+          ClienteConecta
+        </span>
+        <div className="entrar-lado-texto">
+          <p className="entrar-frase">Suas clientes, vendas e cobranças num lugar só.</p>
+          <ul className="entrar-lista">
+            <li>
+              <IconeCheck /> Lembra quem cobrar e quem faz aniversário
+            </li>
+            <li>
+              <IconeCheck /> Anota vendas à vista ou parceladas
+            </li>
+            <li>
+              <IconeCheck /> Manda recibo e catálogo pelo WhatsApp
+            </li>
+          </ul>
+        </div>
+      </aside>
       <main className="entrar-cartao">
         {/* O selo mostra o ícone do app; depois de mandar o e-mail, vira o sinal de pronto. */}
         <span className={`entrar-selo ${selo ? 'entrar-selo-pronto' : ''}`} key={selo ? 'pronto' : 'app'}>
-          {selo ?? <img src="/icone.svg" alt="" width={52} height={52} />}
+          {selo ?? <img src="/icone.svg" alt="" width={56} height={56} />}
         </span>
         {children}
       </main>
-      <p className="entrar-marca">ClienteConecta</p>
     </div>
   )
 }

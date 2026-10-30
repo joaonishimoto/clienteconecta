@@ -50,46 +50,54 @@ export function Conta({ userId, fechar }: { userId: string; fechar: () => void }
   return (
     <>
       <Topo titulo="Minha conta" voltar={fechar} />
-
-      <form className="formulario" onSubmit={salvar}>
-        <Campo rotulo="Seu nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-        <Campo
-          rotulo="Marca que você revende"
-          value={empresa}
-          onChange={(e) => setEmpresa(e.target.value)}
-          placeholder="Ex.: Timol"
-          dica="Aparece no topo do app."
-        />
-        <Botao type="submit">Salvar dados</Botao>
-      </form>
-
       {aviso && <Aviso tipo={aviso.tipo}>{aviso.texto}</Aviso>}
 
-      <MinhaAssinatura />
-      <IndiqueEGanhe />
+      {/* No computador, duas colunas: dados e planilhas à esquerda, assinatura e convites à direita. */}
+      <div className="conta-grade">
+        <div className="conta-coluna">
+          <section className="secao cartao">
+            <h2>Seus dados</h2>
+            <form className="formulario" onSubmit={salvar}>
+              <Campo rotulo="Seu nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+              <Campo
+                rotulo="Marca que você revende"
+                value={empresa}
+                onChange={(e) => setEmpresa(e.target.value)}
+                placeholder="Ex.: Timol"
+                dica="Aparece no topo do app."
+              />
+              <Botao type="submit">Salvar dados</Botao>
+            </form>
+          </section>
 
-      <section className="secao">
-        <h2>Planilhas</h2>
-        <p className="secao-texto">Traga sua lista do Excel ou guarde uma cópia dos seus dados.</p>
-        <div className="painel painel-acoes">
-          <ArquivoBotao rotulo="Trazer clientes de planilha" escolher={(f) => importar('clientes', f)} />
-          <ArquivoBotao rotulo="Trazer produtos de planilha" escolher={(f) => importar('produtos', f)} />
-          <button type="button" className="painel-acao" onClick={() => baixar(`clientes-${hojeISO()}.csv`, clientesParaCsv(clientes))}>
-            <IconeBaixar /> Baixar clientes
-          </button>
-          <button type="button" className="painel-acao" onClick={() => baixar(`produtos-${hojeISO()}.csv`, produtosParaCsv(produtos))}>
-            <IconeBaixar /> Baixar produtos
-          </button>
+          <section className="secao cartao">
+            <h2>Planilhas</h2>
+            <p className="secao-texto">Traga sua lista do Excel ou guarde uma cópia dos seus dados.</p>
+            <div className="painel-acoes">
+              <ArquivoBotao rotulo="Trazer clientes de planilha" escolher={(f) => importar('clientes', f)} />
+              <ArquivoBotao rotulo="Trazer produtos de planilha" escolher={(f) => importar('produtos', f)} />
+              <button type="button" className="painel-acao" onClick={() => baixar(`clientes-${hojeISO()}.csv`, clientesParaCsv(clientes))}>
+                <IconeBaixar /> Baixar clientes
+              </button>
+              <button type="button" className="painel-acao" onClick={() => baixar(`produtos-${hojeISO()}.csv`, produtosParaCsv(produtos))}>
+                <IconeBaixar /> Baixar produtos
+              </button>
+            </div>
+            <p className="campo-dica">
+              A planilha precisa de uma coluna “nome”. Para clientes também valem whatsapp, aniversario e observacao; para
+              produtos, preco, recompra_dias e descricao. O jeito mais fácil é baixar uma planilha e usar como modelo.
+            </p>
+          </section>
         </div>
-        <p className="campo-dica">
-          A planilha precisa de uma coluna “nome”. Para clientes também valem whatsapp, aniversario e observacao; para
-          produtos, preco, recompra_dias e descricao. O jeito mais fácil é baixar uma planilha e usar como modelo.
-        </p>
-      </section>
 
-      <Botao variante="perigo" icone={<IconeSair />} onClick={() => supabase.auth.signOut()}>
-        Sair do app
-      </Botao>
+        <div className="conta-coluna">
+          <MinhaAssinatura />
+          <IndiqueEGanhe />
+          <Botao variante="perigo" icone={<IconeSair />} onClick={() => supabase.auth.signOut()}>
+            Sair do app
+          </Botao>
+        </div>
+      </div>
     </>
   )
 }

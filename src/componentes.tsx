@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
+import { iniciais } from './lib/formato'
 import { IconeSeta, IconeVoltar, IconeWhatsapp } from './icones'
 
 type Variante = 'principal' | 'secundario' | 'whatsapp' | 'perigo' | 'leve'
@@ -53,20 +54,26 @@ export function Topo({
   titulo,
   subtitulo,
   voltar,
+  acao,
 }: {
   titulo: string
   subtitulo?: ReactNode
   voltar?: () => void
+  /** Botão principal da tela: embaixo do título no celular, à direita dele no computador. */
+  acao?: ReactNode
 }) {
   return (
-    <header className="topo">
+    <header className={`topo ${acao ? 'topo-com-acao' : ''}`}>
       {voltar && (
         <button type="button" className="topo-voltar" onClick={voltar}>
           <IconeVoltar /> Voltar
         </button>
       )}
-      <h1>{titulo}</h1>
-      {subtitulo && <p className="topo-sub">{subtitulo}</p>}
+      <div className="topo-texto">
+        <h1>{titulo}</h1>
+        {subtitulo && <p className="topo-sub">{subtitulo}</p>}
+      </div>
+      {acao && <div className="topo-acao">{acao}</div>}
     </header>
   )
 }
@@ -117,11 +124,9 @@ export function Linha({
 
 export function Avatar({ nome, foto }: { nome: string; foto?: string | null }) {
   if (foto) return <img className="avatar avatar-foto" src={foto} alt="" />
-  const partes = nome.trim().split(/\s+/)
-  const iniciais = ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase()
   return (
     <span className="avatar" aria-hidden>
-      {iniciais || '?'}
+      {iniciais(nome) || '?'}
     </span>
   )
 }
