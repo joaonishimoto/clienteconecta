@@ -223,14 +223,54 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .campo { display: flex; flex-direction: column; gap: 0.35rem; }
 .campo-rotulo { font-weight: 650; font-size: 0.95rem; }
 .campo-dica { font-size: 0.88rem; color: var(--tinta-2); }
-.campo input, .campo select, .busca input {
+.campo input, .campo select, .campo textarea, .busca input {
   font: inherit; width: 100%; min-height: 54px; padding: 0.6rem 0.9rem;
   border: 1px solid var(--linha-forte); border-radius: var(--raio-pequeno); background: var(--papel); color: var(--tinta);
 }
-.campo input::placeholder, .busca input::placeholder { color: #8a919c; }
-.campo input:focus, .campo select:focus, .busca input:focus { outline: none; border-color: var(--marca); box-shadow: 0 0 0 3px var(--marca-clara); }
+.campo input::placeholder, .campo textarea::placeholder, .busca input::placeholder { color: #8a919c; }
+.campo textarea { resize: vertical; min-height: 96px; line-height: 1.4; }
+.campo input:focus, .campo select:focus, .campo textarea:focus, .busca input:focus { outline: none; border-color: var(--marca); box-shadow: 0 0 0 3px var(--marca-clara); }
 .checkbox { display: flex; align-items: center; gap: 0.75rem; font-weight: 600; min-height: 52px; }
 .checkbox input { width: 24px; height: 24px; accent-color: var(--marca); flex: none; }
+
+/* Lista de escolha: mesma caixa dos campos, com a seta grande num quadradinho à direita. */
+.escolha { position: relative; display: block; }
+.campo .escolha select {
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  padding-right: 3.6rem; font-weight: 600; color: var(--tinta);
+  text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+}
+.campo .escolha select:hover { border-color: var(--marca-linha); background: #fbfcfe; }
+.escolha-seta {
+  position: absolute; right: 0.55rem; top: 50%; transform: translateY(-50%);
+  width: 38px; height: 38px; padding: 8px; border-radius: 8px;
+  background: var(--marca-clara); color: var(--marca); pointer-events: none;
+  transition: background 0.15s;
+}
+.escolha:focus-within .escolha-seta { background: var(--marca); color: #fff; }
+.campo .escolha select option { font-weight: 500; }
+
+/* Lembretes do produto: cada um num cartão, com botão para tirar e para pôr mais um. */
+.lembretes { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.lembretes legend { padding: 0; margin-bottom: 0.35rem; }
+.lembrete-cartao {
+  display: flex; flex-direction: column; gap: 0.9rem; padding: 1rem;
+  background: var(--papel); border: 1px solid var(--linha); border-left: 4px solid var(--marca); border-radius: var(--raio);
+}
+.lembrete-topo { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.lembrete-numero { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; color: var(--marca); }
+.lembrete-numero svg { width: 20px; height: 20px; }
+.lembrete-tirar {
+  display: inline-flex; align-items: center; gap: 0.35rem; min-height: 44px; padding: 0 0.8rem;
+  border: 1px solid var(--linha-forte); border-radius: var(--raio-pequeno); background: var(--papel);
+  color: var(--perigo); font-weight: 600; font-size: 0.92rem;
+}
+.lembrete-tirar svg { width: 18px; height: 18px; }
+.lembrete-tirar:hover { background: var(--perigo-claro); border-color: var(--perigo-claro); }
+.tarefa-titulo { display: block; color: var(--tinta); }
+.produto-lembretes { display: flex; align-items: center; gap: 0.3rem; }
+.produto-lembretes > span { overflow: hidden; text-overflow: ellipsis; }
+.produto-lembretes svg { width: 16px; height: 16px; flex: none; color: var(--marca); }
 
 .busca { position: relative; display: block; }
 .busca svg { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--tinta-3); }
