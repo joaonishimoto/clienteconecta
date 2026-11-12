@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useDados } from '../lib/dados'
+import { buscarClientes, buscarVendas } from '../lib/busca'
 import type { Cliente, Parcela, VendaItem } from '../lib/tipos'
 import { dataBR, diaMes, dinheiro, hojeISO, lerData, mascaraData, mascaraTelefone, primeiroNome, semAcento } from '../lib/formato'
 import { abrirWhatsapp, mostrarTelefone } from '../lib/whatsapp'
@@ -40,19 +41,16 @@ function situacaoPorCliente(vendas: { id: string; cliente_id: string }[], parcel
 }
 
 function Lista({ abrir, nova }: { abrir: (id: string) => void; nova: () => void }) {
-  const { clientes, vendas, parcelas } = useDados()
+  const { clientes, vendas, itens, parcelas } = useDados()
   const [busca, setBusca] = useState('')
   const [soDevendo, setSoDevendo] = useState(false)
   const situacao = situacaoPorCliente(vendas, parcelas, hojeISO())
   const quantasDevem = clientes.filter((c) => situacao.has(c.id)).length
 
-  const termo = semAcento(busca)
-  const digitos = busca.replace(/\D/g, '')
-  const filtradas = clientes.filter(
-    (c) =>
-      (!soDevendo || situacao.has(c.id)) &&
-      (semAcento(c.nome).includes(termo) || (digitos.length > 2 && c.whatsapp.replace(/\D/g, '').includes(digitos))),
-  )
+  // Enquanto ela procura, a busca vale para todas as clientes (o filtro "A receber" some).
+  const procurando = busca.trim() !== ''
+  const filtradas = buscarClientes(clientes, busca).filter((c) => procurando || !soDevendo || situacao.has(c.id))
+  const vendasAchadas = buscarVendas(vendas, itens, clientes, busca)
 
   return (
     <>
@@ -65,19 +63,25 @@ function Lista({ abrir, nova }: { abrir: (id: string) => void; nova: () => void 
           </Botao>
         }
       />
-      {clientes.length > 5 && (
-        <label className="busca">
+      {clientes.length > 0 && (
+        <div className="busca busca-grande">
           <IconeBusca />
           <input
             type="search"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Nome ou telefone"
-            aria-label="Procurar cliente"
+            placeholder="Procurar nome, telefone ou produto"
+            aria-label="Procurar cliente ou venda"
+            enterKeyHint="search"
           />
-        </label>
+          {procurando && (
+            <button type="button" className="busca-limpar" onClick={() => setBusca('')}>
+              Limpar
+            </button>
+          )}
+        </div>
       )}
-      {quantasDevem > 0 && (
+      {quantasDevem > 0 && !procurando && (
         <div className="filtros" role="group" aria-label="Mostrar">
           <button type="button" aria-pressed={!soDevendo} onClick={() => setSoDevendo(false)}>
             Todas <span>{clientes.length}</span>
@@ -92,13 +96,13 @@ function Lista({ abrir, nova }: { abrir: (id: string) => void; nova: () => void 
           Cadastre a primeira em “Nova cliente”, ou traga sua lista de uma planilha em Minha conta.
         </Vazio>
       )}
-      {clientes.length > 0 && filtradas.length === 0 && (
-        <Vazio titulo={busca ? 'Ninguém com esse nome' : 'Ninguém aqui'}>
-          {busca ? 'Confira a escrita ou procure só pelo primeiro nome.' : undefined}
+      {clientes.length > 0 && filtradas.length === 0 && vendasAchadas.length === 0 && (
+        <Vazio titulo={procurando ? 'Nada encontrado' : 'Ninguém aqui'}>
+          {procurando ? 'Confira a escrita ou procure só pelo primeiro nome ou por uma parte do produto.' : undefined}
         </Vazio>
       )}
       {filtradas.length > 0 && (
-        <Secao>
+        <Secao titulo={procurando && vendasAchadas.length > 0 ? `Clientes (${filtradas.length})` : undefined}>
           {filtradas.map((c) => {
             const s = situacao.get(c.id)
             return (
@@ -119,6 +123,29 @@ function Lista({ abrir, nova }: { abrir: (id: string) => void; nova: () => void 
               />
             )
           })}
+        </Secao>
+      )}
+      {vendasAchadas.length > 0 && (
+        <Secao titulo={`Vendas (${vendasAchadas.length})`}>
+          {vendasAchadas.slice(0, 50).map(({ venda, cliente, itens }) => (
+            <Linha
+              key={venda.id}
+              inicio={<Avatar nome={cliente?.nome ?? '?'} />}
+              titulo={
+                <>
+                  {cliente?.nome ?? 'Cliente apagada'}
+                  {itens.length > 0 && <span className="venda-achada-itens">{descreverItens(itens)}</span>}
+                </>
+              }
+              fim={
+                <span className="valor valor-neutro">
+                  {dinheiro(venda.total)}
+                  <small>{dataBR(venda.data)}</small>
+                </span>
+              }
+              onClick={cliente ? () => abrir(cliente.id) : undefined}
+            />
+          ))}
         </Secao>
       )}
     </>

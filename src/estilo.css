@@ -157,6 +157,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .valor { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; font-weight: 700; color: var(--tinta); }
 .valor small { font-size: 0.8rem; font-weight: 600; color: var(--alerta); }
 .valor-atrasado, .valor-atrasado small { color: var(--perigo); }
+.valor-neutro small { color: var(--tinta-2); }
+.venda-achada-itens { display: block; overflow-wrap: break-word; margin-top: 0.15rem; color: var(--tinta-2); font-size: 0.95rem; font-weight: 550; }
 
 .avatar {
   flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
@@ -276,6 +278,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .busca { position: relative; display: block; }
 .busca svg { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--tinta-3); }
 .busca input { padding-left: 2.9rem; }
+.busca-grande input { min-height: 60px; font-size: 1.1rem; padding-right: 6.5rem; }
+.busca-grande svg { width: 24px; height: 24px; }
+.busca-grande input::-webkit-search-cancel-button { display: none; }
+.busca-limpar {
+  position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); min-height: 44px; padding: 0 0.9rem;
+  border: none; border-radius: 999px; background: #eaecf0; color: var(--tinta); font: inherit; font-weight: 650;
+}
 
 /* Avisos e estados vazios */
 .aviso { padding: 0.8rem 1rem; border-radius: var(--raio-pequeno); font-weight: 600; }
