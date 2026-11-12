@@ -1,11 +1,12 @@
 import Papa from 'papaparse'
-import type { Cliente, Produto } from './tipos'
+import type { Cliente, Produto, ProdutoLembrete } from './tipos'
 import { dataBR, lerData, lerDinheiro } from './formato'
 
 // Planilhas em CSV com ponto e vírgula e BOM: é o formato que o Excel brasileiro abre direto.
 
 type NovoCliente = Omit<Cliente, 'id'>
-type NovoProduto = Omit<Produto, 'id' | 'foto_url'>
+/** recompra_dias vira um lembrete "Hora de repor" do produto. */
+type NovoProduto = Omit<Produto, 'id' | 'foto_url'> & { recompra_dias: number | null }
 
 export function clientesParaCsv(clientes: Cliente[]): string {
   return gerar(
@@ -14,13 +15,16 @@ export function clientesParaCsv(clientes: Cliente[]): string {
   )
 }
 
-export function produtosParaCsv(produtos: Produto[]): string {
+/** A planilha tem uma coluna só de recompra: vai o primeiro lembrete (o mais cedo) de cada produto. */
+export function produtosParaCsv(produtos: Produto[], lembretes: ProdutoLembrete[] = []): string {
+  const dias = new Map<string, number>()
+  for (const l of lembretes) dias.set(l.produto_id, Math.min(l.dias, dias.get(l.produto_id) ?? Infinity))
   return gerar(
     ['nome', 'preco', 'recompra_dias', 'descricao'],
     produtos.map((p) => [
       p.nome,
       p.preco.toFixed(2).replace('.', ','),
-      p.recompra_dias ? String(p.recompra_dias) : '',
+      dias.has(p.id) ? String(dias.get(p.id)) : '',
       p.descricao,
     ]),
   )

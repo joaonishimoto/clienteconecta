@@ -18,7 +18,7 @@ Em "Minha conta" ficam o nome, a marca, a assinatura, o "Indique e ganhe", a imp
 ### 1. Supabase
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
-2. Em **SQL Editor**, cole e rode o conteúdo de `supabase/migrations/001_inicial.sql`. Ele cria as tabelas, a segurança (cada usuária só vê os próprios dados) e o espaço das fotos.
+2. Em **SQL Editor**, cole e rode o conteúdo de `supabase/migrations/001_inicial.sql`. Ele cria as tabelas, a segurança (cada usuária só vê os próprios dados) e o espaço das fotos. Depois rode, na ordem, os outros arquivos da pasta (`002`, `003`, `004`...). O `004_varios_lembretes.sql` cria os lembretes de produto (vários por produto, com título e descrição) e copia os lembretes antigos.
 3. Em **Authentication → URL Configuration**, coloque o endereço do site da Vercel em **Site URL** e também em **Redirect URLs**.
 4. Em **Project Settings → API**, copie a **Project URL** e a chave **anon public**.
 
@@ -73,6 +73,6 @@ npm test                     # testes das regras (datas, lembretes, planilhas, W
 As colunas aceitas são:
 
 - **Clientes:** `nome`, `whatsapp`, `aniversario` (25/12 ou 25/12/1960), `observacao`
-- **Produtos:** `nome`, `preco` (49,90), `recompra_dias` (ex.: 30), `descricao`
+- **Produtos:** `nome`, `preco` (49,90), `recompra_dias` (ex.: 30), `descricao`. Na planilha vai só um lembrete por produto (o mais cedo); ao importar, `recompra_dias` vira o lembrete "Hora de repor". Os outros lembretes se cadastram no Catálogo.
 
 Maiúsculas e acentos no cabeçalho não importam, e linhas com nome repetido são puladas. O jeito mais fácil é baixar a planilha no app e usar como modelo.

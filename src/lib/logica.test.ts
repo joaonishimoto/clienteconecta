@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { diasAteAniversario, lerData, lerDinheiro, mascaraData, mascaraTelefone, semAcento, somarMeses } from './formato'
 import { linkWhatsapp, mostrarTelefone, normalizarWhatsapp } from './whatsapp'
 import { montarLembretes } from './lembretes'
-import { clientesParaCsv, lerClientes, lerProdutos } from './planilha'
-import type { Cliente, Parcela, Venda, VendaItem } from './tipos'
+import { clientesParaCsv, lerClientes, lerProdutos, produtosParaCsv } from './planilha'
+import type { Cliente, Parcela, Venda, VendaItem, VendaLembrete } from './tipos'
 import { buscarClientes, buscarVendas } from './busca'
 import { podeUsarConvite, progresso, situacao } from './assinatura'
 
@@ -66,8 +66,9 @@ describe('lembretes', () => {
   const parcela = (id: string, vencimento: string, pago_em: string | null = null): Parcela => ({
     id, venda_id: 'v1', numero: 1, de: 3, valor: 100, vencimento, pago_em,
   })
-  const item = (id: string, recompra_em: string | null, recompra_avisada = false): VendaItem => ({
-    id, venda_id: 'v1', produto_id: 'p1', nome: 'Refil', quantidade: 1, preco: 100, recompra_em, recompra_avisada,
+  const itens: VendaItem[] = [{ id: 'i1', venda_id: 'v1', produto_id: 'p1', nome: 'Refil', quantidade: 1, preco: 100 }]
+  const lembrete = (id: string, lembrar_em: string, avisado = false, titulo = 'Hora de repor', descricao = ''): VendaLembrete => ({
+    id, venda_item_id: 'i1', titulo, descricao, lembrar_em, avisado,
   })
 
   it('junta cobranças, aniversários e recompras do dia', () => {
@@ -76,12 +77,24 @@ describe('lembretes', () => {
       [ana, bia],
       vendas,
       [parcela('p-atrasada', '2026-10-20'), parcela('p-paga', '2026-10-20', '2026-10-20'), parcela('p-longe', '2026-11-25')],
-      [item('i-vencido', '2026-10-01'), item('i-avisado', '2026-10-01', true), item('i-futuro', '2026-12-01')],
+      itens,
+      [lembrete('l-vencido', '2026-10-01'), lembrete('l-avisado', '2026-10-01', true), lembrete('l-futuro', '2026-12-01')],
     )
     expect(l.map((x) => x.tipo)).toEqual(['parcela', 'aniversario', 'recompra'])
     expect(l[0].tipo === 'parcela' && l[0].atrasada).toBe(true)
     expect(l[0].mensagem).toContain('Oi Ana')
     expect(l[1].tipo === 'aniversario' && l[1].emDias).toBe(1)
+  })
+
+  it('mostra cada lembrete do mesmo produto e usa a descrição na mensagem', () => {
+    const l = montarLembretes('2026-10-25', [ana], vendas, [], itens, [
+      lembrete('l-limpar', '2026-10-20', false, 'Limpar a vela'),
+      lembrete('l-refil', '2026-10-10', false, 'Trocar o refil', 'Quer que eu separe um novo?'),
+    ])
+    const recompras = l.filter((x) => x.tipo === 'recompra')
+    expect(recompras.map((x) => x.tipo === 'recompra' && x.lembrete.titulo)).toEqual(['Trocar o refil', 'Limpar a vela'])
+    expect(recompras[0].mensagem).toBe('Oi Ana, tudo bem? Já faz um tempinho que você levou Refil. Quer que eu separe um novo?')
+    expect(recompras[1].mensagem).toContain('Está na hora de repor?')
   })
 })
 
@@ -98,6 +111,17 @@ describe('planilha', () => {
     expect(lerProdutos('produto,valor,recompra_dias\nChá Poli Ervas,"40,00",30')).toEqual([
       { nome: 'Chá Poli Ervas', preco: 40, recompra_dias: 30, descricao: '' },
     ])
+  })
+
+  it('exporta o lembrete mais cedo de cada produto na coluna recompra_dias', () => {
+    const csv = produtosParaCsv(
+      [{ id: 'p1', nome: 'Filtro', preco: 300, descricao: '', foto_url: null }],
+      [
+        { id: 'a', produto_id: 'p1', dias: 365, titulo: 'Limpar a vela', descricao: '' },
+        { id: 'b', produto_id: 'p1', dias: 180, titulo: 'Trocar o refil', descricao: '' },
+      ],
+    )
+    expect(csv).toContain('Filtro;300,00;180;')
   })
 
   it('exporta e importa de volta sem perder nada', () => {
@@ -168,7 +192,7 @@ describe('busca', () => {
     { id: 'v2', cliente_id: 'm', data: '2026-10-20', total: 45 },
   ]
   const item = (venda_id: string, nome: string): VendaItem => ({
-    id: venda_id + nome, venda_id, produto_id: null, nome, quantidade: 1, preco: 1, recompra_em: null, recompra_avisada: false,
+    id: venda_id + nome, venda_id, produto_id: null, nome, quantidade: 1, preco: 1,
   })
   const itens = [item('v1', 'Shampoo de Camomila'), item('v2', 'Creme para as mãos')]
 

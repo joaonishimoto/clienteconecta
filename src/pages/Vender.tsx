@@ -21,12 +21,12 @@ import { abrirWhatsapp } from '../lib/whatsapp'
 import { Avatar, Aviso, Botao, Campo, Linha, Secao, Topo, Vazio } from '../componentes'
 import { IconeBusca, IconeCheck, IconeMais, IconeMenos, IconeWhatsapp } from '../icones'
 
-type ItemVenda = { produtoId: string | null; nome: string; preco: number; quantidade: number; recompraDias: number | null }
+type ItemVenda = { produtoId: string | null; nome: string; preco: number; quantidade: number }
 
 const VEZES = Array.from({ length: 12 }, (_, i) => i + 1)
 
 export function Vender({ clienteInicial, irPara }: { clienteInicial: string | null; irPara: (a: Aba) => void }) {
-  const { clientes, produtos, vendas, itens: itensSalvos, recarregar } = useDados()
+  const { clientes, produtos, vendas, itens: itensSalvos, produtoLembretes, vendaLembretes, recarregar } = useDados()
   const [clienteId, setClienteId] = useState<string | null>(clienteInicial)
   const [busca, setBusca] = useState('')
   const [buscaProduto, setBuscaProduto] = useState('')
@@ -109,17 +109,35 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
       const venda = await supabase.from('vendas').insert({ cliente_id: cliente.id, data: hoje, total }).select('id').single()
       if (venda.error) throw venda.error
 
-      const r1 = await supabase.from('venda_itens').insert(
-        linhas.map((l) => ({
-          venda_id: venda.data.id,
-          produto_id: l.produtoId,
-          nome: l.nome,
-          quantidade: l.quantidade,
-          preco: l.preco,
-          recompra_em: l.recompraDias ? somarDias(hoje, l.recompraDias) : null,
-        })),
-      )
+      const r1 = await supabase
+        .from('venda_itens')
+        .insert(
+          linhas.map((l) => ({
+            venda_id: venda.data.id,
+            produto_id: l.produtoId,
+            nome: l.nome,
+            quantidade: l.quantidade,
+            preco: l.preco,
+          })),
+        )
+        .select('id, produto_id')
       if (r1.error) throw r1.error
+
+      // Cada lembrete do produto vira uma data na aba Hoje.
+      const novosLembretes = r1.data.flatMap((item) =>
+        produtoLembretes
+          .filter((pl) => item.produto_id && pl.produto_id === item.produto_id)
+          .map((pl) => ({
+            venda_item_id: item.id,
+            titulo: pl.titulo,
+            descricao: pl.descricao,
+            lembrar_em: somarDias(hoje, pl.dias),
+          })),
+      )
+      if (novosLembretes.length) {
+        const r3 = await supabase.from('venda_lembretes').insert(novosLembretes)
+        if (r3.error) throw r3.error
+      }
 
       // Centavos que sobram da divisão vão na primeira parcela.
       const centavos = Math.round(total * 100)
@@ -136,15 +154,15 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
       )
       if (r2.error) throw r2.error
 
-      // Ela comprou de novo: os avisos de recompra antigos desses produtos não valem mais.
+      // Ela comprou de novo: os lembretes antigos desses produtos não valem mais.
       const vendasDela = new Set(vendas.filter((v) => v.cliente_id === cliente.id).map((v) => v.id))
-      const antigos = itensSalvos
-        .filter(
-          (i) =>
-            !i.recompra_avisada && vendasDela.has(i.venda_id) && linhas.some((l) => l.produtoId && l.produtoId === i.produto_id),
-        )
-        .map((i) => i.id)
-      if (antigos.length) await supabase.from('venda_itens').update({ recompra_avisada: true }).in('id', antigos)
+      const itensAntigos = new Set(
+        itensSalvos
+          .filter((i) => vendasDela.has(i.venda_id) && linhas.some((l) => l.produtoId && l.produtoId === i.produto_id))
+          .map((i) => i.id),
+      )
+      const antigos = vendaLembretes.filter((l) => !l.avisado && itensAntigos.has(l.venda_item_id)).map((l) => l.id)
+      if (antigos.length) await supabase.from('venda_lembretes').update({ avisado: true }).in('id', antigos)
 
       await recarregar()
       setConcluida({ total, vezes })
@@ -198,7 +216,7 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
                   type="button"
                   key={p.id}
                   className={`produto-botao ${qtd ? 'produto-escolhido' : ''}`}
-                  onClick={() => adicionar({ produtoId: p.id, nome: p.nome, preco: p.preco, recompraDias: p.recompra_dias })}
+                  onClick={() => adicionar({ produtoId: p.id, nome: p.nome, preco: p.preco })}
                   aria-label={qtd ? `${p.nome}, ${qtd} na venda. Tocar para somar mais um` : `Adicionar ${p.nome}`}
                 >
                   {p.foto_url ? <img src={p.foto_url} alt="" /> : <span className="produto-sem-foto">{iniciais(p.nome)}</span>}
@@ -233,7 +251,7 @@ export function Vender({ clienteInicial, irPara }: { clienteInicial: string | nu
                 variante="secundario"
                 disabled={!avulso.nome.trim() || lerDinheiro(avulso.preco) <= 0}
                 onClick={() => {
-                  adicionar({ produtoId: null, nome: avulso.nome.trim(), preco: lerDinheiro(avulso.preco), recompraDias: null })
+                  adicionar({ produtoId: null, nome: avulso.nome.trim(), preco: lerDinheiro(avulso.preco) })
                   setAvulso({ nome: '', preco: '' })
                 }}
               >

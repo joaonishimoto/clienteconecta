@@ -8,7 +8,7 @@ import { IconeBaixar, IconeSair, IconeSubir } from '../icones'
 import { IndiqueEGanhe, MinhaAssinatura } from './Assinatura'
 
 export function Conta({ userId, fechar }: { userId: string; fechar: () => void }) {
-  const { perfil, clientes, produtos, recarregar } = useDados()
+  const { perfil, clientes, produtos, produtoLembretes, recarregar } = useDados()
   const [nome, setNome] = useState(perfil?.nome ?? '')
   const [empresa, setEmpresa] = useState(perfil?.empresa ?? '')
   const [aviso, setAviso] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null)
@@ -32,9 +32,25 @@ export function Conta({ userId, fechar }: { userId: string; fechar: () => void }
       // Não duplica: pula quem já existe com o mesmo nome.
       const existentes = new Set((tipo === 'clientes' ? clientes : produtos).map((x) => x.nome.toLowerCase()))
       const novas = linhas.filter((l) => !existentes.has(l.nome.toLowerCase()))
-      if (novas.length) {
-        const { error } = await supabase.from(tipo).insert(novas)
+      if (novas.length && tipo === 'clientes') {
+        const { error } = await supabase.from('clientes').insert(novas)
         if (error) throw error
+      }
+      if (novas.length && tipo === 'produtos') {
+        const produtosNovos = novas as ReturnType<typeof lerProdutos>
+        const { data, error } = await supabase
+          .from('produtos')
+          .insert(produtosNovos.map(({ recompra_dias: _, ...p }) => p))
+          .select('id, nome')
+        if (error) throw error
+        const dias = new Map(produtosNovos.map((p) => [p.nome, p.recompra_dias]))
+        const lembretes = data
+          .filter((p) => dias.get(p.nome))
+          .map((p) => ({ produto_id: p.id, dias: dias.get(p.nome)!, titulo: 'Hora de repor' }))
+        if (lembretes.length) {
+          const r = await supabase.from('produto_lembretes').insert(lembretes)
+          if (r.error) throw r.error
+        }
       }
       await recarregar()
       const pulados = linhas.length - novas.length
@@ -79,7 +95,7 @@ export function Conta({ userId, fechar }: { userId: string; fechar: () => void }
               <button type="button" className="painel-acao" onClick={() => baixar(`clientes-${hojeISO()}.csv`, clientesParaCsv(clientes))}>
                 <IconeBaixar /> Baixar clientes
               </button>
-              <button type="button" className="painel-acao" onClick={() => baixar(`produtos-${hojeISO()}.csv`, produtosParaCsv(produtos))}>
+              <button type="button" className="painel-acao" onClick={() => baixar(`produtos-${hojeISO()}.csv`, produtosParaCsv(produtos, produtoLembretes))}>
                 <IconeBaixar /> Baixar produtos
               </button>
             </div>

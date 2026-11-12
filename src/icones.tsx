@@ -36,6 +36,7 @@ export const IconeOlhoFechado = (p: P) => (
   <Base {...p}><path d="M10 5.7a9 9 0 0 1 2-.2c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-2.4 3.2M6.4 6.9C3.9 8.6 2.5 12 2.5 12S6 18.5 12 18.5c1.9 0 3.5-.6 4.9-1.5" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" /></Base>
 )
 export const IconeSeta = (p: P) => <Base {...p}><path d="m9 5 7 7-7 7" /></Base>
+export const IconeAbrir = (p: P) => <Base {...p}><path d="m6 9 6 6 6-6" /></Base>
 export const IconeMais = (p: P) => <Base {...p}><path d="M12 5v14M5 12h14" /></Base>
 export const IconeMenos = (p: P) => <Base {...p}><path d="M5 12h14" /></Base>
 export const IconeCheck = (p: P) => <Base {...p}><path d="m5 12.5 4.5 4.5L19 7.5" /></Base>
