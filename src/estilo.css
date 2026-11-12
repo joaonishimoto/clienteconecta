@@ -90,7 +90,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .aba-icone { display: grid; place-items: center; width: 60px; height: 34px; border-radius: 999px; transition: background-color 0.15s, color 0.15s; }
 .aba-icone svg { width: 24px; height: 24px; }
 .abas button.ativa { color: var(--marca); font-weight: 700; }
-.abas button.ativa .aba-icone { background: var(--marca-clara); }
+.abas button.ativa .aba-icone { background: var(--marca-clara); animation: pilula 0.22s cubic-bezier(0.4, 0, 0.2, 1); }
+.abas button:active:not(.ativa) .aba-icone { background: var(--fundo); }
 
 /* Menu lateral: escondido no celular, aparece no computador (ver o fim do arquivo) */
 .lateral { display: none; }
@@ -482,6 +483,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 @keyframes aparecer { from { opacity: 0; transform: translateY(6px); } }
 @keyframes balancar { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@keyframes pilula { from { transform: scaleX(0.55); opacity: 0.4; } }
 @keyframes girar { to { transform: rotate(360deg); } }
 @keyframes pulsar { from { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.08); } }
 
@@ -492,65 +494,94 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .topo-acao .botao { width: auto; }
 }
 
+@property --lateral { syntax: '<length>'; inherits: true; initial-value: 264px; }
+
 /* Computador: menu claro ao lado no lugar das abas, conteúdo com colunas */
 @media (min-width: 1024px) {
   .app {
-    --lateral: 256px;
+    --lateral: 264px;
     max-width: none; padding-bottom: 0;
     display: grid; grid-template-columns: var(--lateral) minmax(0, 1fr); align-items: start;
-    transition: grid-template-columns 0.2s ease;
+    /* --lateral é registrada como medida (@property), então o fundo e a coluna andam juntos na animação */
+    transition: --lateral 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     /* O fundo do menu continua até o fim de páginas compridas */
     background: linear-gradient(to right, var(--papel) calc(var(--lateral) - 1px), var(--linha) 0 var(--lateral), transparent 0);
   }
-  .app-recolhido { --lateral: 96px; }
+  .app-recolhido { --lateral: 85px; }
   .cabecalho, .abas { display: none; }
 
+  /*
+    Menu lateral. Aberto ou recolhido, cada ícone fica sempre no mesmo lugar: só a largura muda,
+    e os nomes somem aos poucos. Assim nada "pula" na tela quando ela abre ou recolhe.
+    Recolhido, passar o mouse (ou o teclado) num ícone mostra o nome dele num balão.
+  */
   .lateral {
-    position: sticky; top: 0; height: 100vh; overflow-y: auto;
-    display: flex; flex-direction: column; gap: 0.25rem; padding: 1.25rem 0.85rem 1rem;
+    --item-x: 18px; /* recuo do ícone dentro do botão: igual nos dois estados */
+    position: sticky; top: 0; z-index: 6; height: 100vh;
+    display: flex; flex-direction: column; gap: 0.25rem; padding: 1.25rem 12px 1rem;
     background: var(--papel); border-right: 1px solid var(--linha);
   }
   .lateral-marca {
-    display: flex; align-items: center; gap: 0.7rem; padding: 0.2rem 0.5rem 1.25rem; margin-bottom: 0.5rem;
-    font-weight: 750; font-size: 1.1rem; line-height: 1.2;
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.2rem 0 1.25rem 10px; margin-bottom: 0.5rem;
+    font-weight: 750; font-size: 1.1rem; line-height: 1.2; white-space: nowrap; overflow: hidden;
+    border-bottom: 1px solid var(--linha);
   }
   .lateral-marca img { flex: none; border-radius: 10px; }
-  /* O nome nunca quebra no meio da palavra: nomes longos vão para a 2ª linha e, se não couber, terminam em "…" */
-  .lateral-nome {
-    min-width: 0; overflow: hidden; text-overflow: ellipsis;
-    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-  }
+  .lateral-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
-  .lateral-abas { display: flex; flex-direction: column; gap: 0.2rem; }
+  .lateral-abas { display: flex; flex-direction: column; gap: 0.25rem; }
   .lateral-abas button, .lateral-conta, .lateral-recolher {
-    position: relative; display: flex; align-items: center; gap: 0.85rem; width: 100%; min-height: 52px; padding: 0.5rem 0.85rem;
-    background: none; border: none; border-radius: var(--raio-pequeno); text-align: left;
+    position: relative; display: flex; align-items: center; gap: 0.9rem; width: 100%; min-height: 52px;
+    padding: 0.5rem 0.75rem 0.5rem var(--item-x);
+    background: none; border: none; border-radius: var(--raio-pequeno); text-align: left; white-space: nowrap;
     font-weight: 600; font-size: 1rem; color: var(--tinta-2);
     transition: background-color 0.15s, color 0.15s;
   }
-  .lateral-abas svg { flex: none; width: 24px; height: 24px; }
+  .lateral-abas svg, .lateral-recolher svg { flex: none; width: 24px; height: 24px; }
   .lateral-abas button:hover, .lateral-conta:hover, .lateral-recolher:hover { background: var(--fundo); color: var(--tinta); }
   .lateral-abas button.ativa, .lateral-conta.ativa { background: var(--marca-clara); color: var(--marca); font-weight: 700; }
+  /* Tracinho da cor da marca na aba aberta, para achar "onde estou" de relance */
+  .lateral-abas button.ativa::before {
+    content: ''; position: absolute; left: -12px; top: 10px; bottom: 10px; width: 4px;
+    border-radius: 0 4px 4px 0; background: var(--marca);
+  }
 
-  .lateral-conta { margin-top: auto; padding: 0.55rem 0.6rem; }
-  .lateral-conta .avatar { width: 42px; height: 42px; font-size: 0.85rem; }
-  .lateral-conta-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
-  .lateral-conta-texto strong { color: var(--tinta); overflow-wrap: anywhere; }
+  /* Os nomes ficam numa caixa que encolhe junto com o menu e esmaece */
+  .lateral-texto, .lateral-nome, .lateral-conta-texto {
+    transition: opacity 0.18s ease 0.08s;
+  }
+  .lateral-texto { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+  .lateral-conta { margin-top: auto; padding-left: 9px; }
+  .lateral-conta .avatar { flex: none; width: 42px; height: 42px; font-size: 0.85rem; }
+  .lateral-conta-texto { display: flex; flex-direction: column; min-width: 0; overflow: hidden; line-height: 1.2; }
+  .lateral-conta-texto strong { color: var(--tinta); overflow: hidden; text-overflow: ellipsis; }
   .lateral-conta-texto span { font-size: 0.85rem; font-weight: 500; color: var(--tinta-3); }
 
-  .lateral-recolher { min-height: 48px; font-size: 0.92rem; font-weight: 500; color: var(--tinta-3); margin-top: 0.4rem; }
-  .lateral-recolher svg { flex: none; transition: transform 0.2s; }
-
-  /* Recolhido: só o ícone, com o nome pequeno embaixo para ela não precisar adivinhar */
-  .app-recolhido .lateral { padding-left: 0.55rem; padding-right: 0.55rem; }
-  .app-recolhido .lateral-marca { justify-content: center; padding-left: 0; padding-right: 0; }
-  .app-recolhido .lateral-nome, .app-recolhido .lateral-conta-texto { display: none; }
-  .app-recolhido .lateral-abas button, .app-recolhido .lateral-recolher {
-    flex-direction: column; justify-content: center; gap: 0.25rem; min-height: 68px; padding: 0.5rem 0.2rem;
-    font-size: 0.78rem; text-align: center;
+  .lateral-recolher {
+    min-height: 48px; margin-top: 0.4rem; font-size: 0.95rem; font-weight: 600; color: var(--tinta-3);
+    border-top: 1px solid var(--linha); border-radius: 0 0 var(--raio-pequeno) var(--raio-pequeno);
   }
-  .app-recolhido .lateral-conta { justify-content: center; padding: 0.55rem 0; }
+  .lateral-recolher svg { transition: transform 0.25s ease; }
+
+  /* Recolhido */
+  .app-recolhido .lateral-texto, .app-recolhido .lateral-nome, .app-recolhido .lateral-conta-texto {
+    opacity: 0; transition-delay: 0s; transition-duration: 0.1s;
+  }
   .app-recolhido .lateral-recolher svg { transform: scaleX(-1); }
+
+  /* Balão com o nome, só com o menu recolhido */
+  .lateral [data-dica]::after {
+    content: attr(data-dica); position: absolute; left: calc(100% + 14px); top: 50%; z-index: 20;
+    padding: 0.45rem 0.8rem; border-radius: 8px; background: var(--tinta); color: #fff;
+    font-size: 0.95rem; font-weight: 600; white-space: nowrap; box-shadow: var(--sombra-flutua);
+    opacity: 0; visibility: hidden; transform: translate(-4px, -50%); pointer-events: none;
+    transition: opacity 0.12s, transform 0.12s, visibility 0.12s;
+  }
+  .app-recolhido .lateral [data-dica]:hover::after,
+  .app-recolhido .lateral [data-dica]:focus-visible::after {
+    opacity: 1; visibility: visible; transform: translate(0, -50%);
+  }
 
   /* Conteúdo */
   .conteudo { width: 100%; max-width: 1180px; margin: 0 auto; padding: 2.25rem 3rem 3.5rem; gap: 1.5rem; }
@@ -611,6 +642,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before { transition: none !important; animation: none !important; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
   .carregando-botao::before { display: none; }
 }

@@ -56,7 +56,8 @@ function Principal({ userId }: { userId: string }) {
   // Muda a cada toque numa aba, para cada tela voltar ao começo.
   const [toque, setToque] = useState(0)
   // No computador o menu fica ao lado; ela pode recolher e o app lembra da escolha.
-  const [recolhido, setRecolhido] = useState(() => lerPreferencia('menu-recolhido'))
+  // Sem escolha guardada, começa recolhido em telas de notebook pequenas, para sobrar espaço.
+  const [recolhido, setRecolhido] = useState(() => lerPreferencia('menu-recolhido') ?? window.innerWidth < 1280)
   // Volta do Stripe com ?assinatura=ok: avisa e confere de novo, porque o aviso do pagamento leva alguns segundos.
   const [voltouDoPagamento] = useState(() => new URLSearchParams(window.location.search).get('assinatura') === 'ok')
 
@@ -81,6 +82,15 @@ function Principal({ userId }: { userId: string }) {
         // Sem internet: tenta de novo na próxima vez que abrir o app.
       })
   }, [assinatura, recarregar])
+
+  // Com o app aberto em duas abas, recolher numa recolhe na outra também.
+  useEffect(() => {
+    const aoMudar = (e: StorageEvent) => {
+      if (e.key === 'menu-recolhido' && e.newValue) setRecolhido(e.newValue === '1')
+    }
+    window.addEventListener('storage', aoMudar)
+    return () => window.removeEventListener('storage', aoMudar)
+  }, [])
 
   const alternarMenu = () => {
     setRecolhido((r) => {
@@ -126,7 +136,7 @@ function Principal({ userId }: { userId: string }) {
         </button>
       </header>
 
-      {/* Menu lateral, só em telas largas. Recolhido, mostra o ícone com o nome pequeno embaixo. */}
+      {/* Menu lateral, só em telas largas. Recolhido, mostra só os ícones e o nome aparece num balão. */}
       <aside className="lateral" aria-label="Menu">
         <span className="lateral-marca" title={recolhido ? empresa : undefined}>
           <img src="/icone.svg" alt="" width={40} height={40} />
@@ -139,10 +149,11 @@ function Principal({ userId }: { userId: string }) {
               type="button"
               className={!contaAberta && aba === a.id ? 'ativa' : ''}
               aria-current={!contaAberta && aba === a.id ? 'page' : undefined}
+              data-dica={recolhido ? a.nome : undefined}
               onClick={() => irPara(a.id)}
             >
               <a.Icone />
-              <span>{a.nome}</span>
+              <span className="lateral-texto">{a.nome}</span>
             </button>
           ))}
         </nav>
@@ -151,7 +162,7 @@ function Principal({ userId }: { userId: string }) {
           className={`lateral-conta ${contaAberta ? 'ativa' : ''}`}
           aria-current={contaAberta ? 'page' : undefined}
           aria-label="Minha conta"
-          title={recolhido ? 'Minha conta' : undefined}
+          data-dica={recolhido ? 'Minha conta' : undefined}
           onClick={() => setContaAberta(true)}
         >
           <Avatar nome={perfil?.nome || '?'} />
@@ -160,9 +171,16 @@ function Principal({ userId }: { userId: string }) {
             <span>Minha conta</span>
           </span>
         </button>
-        <button type="button" className="lateral-recolher" onClick={alternarMenu} aria-expanded={!recolhido}>
+        <button
+          type="button"
+          className="lateral-recolher"
+          onClick={alternarMenu}
+          aria-expanded={!recolhido}
+          aria-label={recolhido ? 'Abrir menu' : 'Recolher menu'}
+          data-dica={recolhido ? 'Abrir menu' : undefined}
+        >
           <IconeRecolher />
-          <span>{recolhido ? 'Abrir menu' : 'Recolher menu'}</span>
+          <span className="lateral-texto">Recolher menu</span>
         </button>
       </aside>
 
@@ -212,11 +230,12 @@ function Principal({ userId }: { userId: string }) {
   )
 }
 
-function lerPreferencia(chave: string) {
+function lerPreferencia(chave: string): boolean | null {
   try {
-    return localStorage.getItem(chave) === '1'
+    const valor = localStorage.getItem(chave)
+    return valor === null ? null : valor === '1'
   } catch {
-    return false
+    return null
   }
 }
 
