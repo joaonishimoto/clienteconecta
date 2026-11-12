@@ -4,6 +4,7 @@ import { linkWhatsapp, mostrarTelefone, normalizarWhatsapp } from './whatsapp'
 import { montarLembretes } from './lembretes'
 import { clientesParaCsv, lerClientes, lerProdutos } from './planilha'
 import type { Cliente, Parcela, Venda, VendaItem } from './tipos'
+import { buscarClientes, buscarVendas } from './busca'
 import { podeUsarConvite, progresso, situacao } from './assinatura'
 
 describe('formato', () => {
@@ -156,5 +157,37 @@ describe('assinatura', () => {
     expect(podeUsarConvite(a, new Date('2026-10-05T12:00:00Z'))).toBe(true)
     expect(podeUsarConvite(a, new Date('2026-10-09T12:00:00Z'))).toBe(false)
     expect(podeUsarConvite({ ...a, indicada_por: 'x' }, new Date('2026-10-02T12:00:00Z'))).toBe(false)
+  })
+})
+
+describe('busca', () => {
+  const cli = (id: string, nome: string, whatsapp: string, observacao = ''): Cliente => ({ id, nome, whatsapp, aniversario: null, observacao })
+  const clientes = [cli('a', 'Ana Lúcia Ferreira', '5511987654321', 'prefere chá'), cli('m', 'Maria José', '5521912345678')]
+  const vendas: Venda[] = [
+    { id: 'v1', cliente_id: 'a', data: '2026-11-03', total: 89.9 },
+    { id: 'v2', cliente_id: 'm', data: '2026-10-20', total: 45 },
+  ]
+  const item = (venda_id: string, nome: string): VendaItem => ({
+    id: venda_id + nome, venda_id, produto_id: null, nome, quantidade: 1, preco: 1, recompra_em: null, recompra_avisada: false,
+  })
+  const itens = [item('v1', 'Shampoo de Camomila'), item('v2', 'Creme para as mãos')]
+
+  it('acha cliente pelo nome sem acento, pelo telefone e pela anotação', () => {
+    expect(buscarClientes(clientes, 'lucia').map((c) => c.id)).toEqual(['a'])
+    expect(buscarClientes(clientes, 'ana ferreira').map((c) => c.id)).toEqual(['a'])
+    expect(buscarClientes(clientes, '98765').map((c) => c.id)).toEqual(['a'])
+    expect(buscarClientes(clientes, '(21) 91234-5678').map((c) => c.id)).toEqual(['m'])
+    expect(buscarClientes(clientes, 'cha').map((c) => c.id)).toEqual(['a'])
+    expect(buscarClientes(clientes, '')).toHaveLength(2)
+  })
+
+  it('acha venda pelo produto, pela data e por produto com cliente', () => {
+    expect(buscarVendas(vendas, itens, clientes, 'shampoo').map((v) => v.venda.id)).toEqual(['v1'])
+    expect(buscarVendas(vendas, itens, clientes, 'maos').map((v) => v.venda.id)).toEqual(['v2'])
+    expect(buscarVendas(vendas, itens, clientes, '20/10').map((v) => v.venda.id)).toEqual(['v2'])
+    expect(buscarVendas(vendas, itens, clientes, 'creme maria').map((v) => v.venda.id)).toEqual(['v2'])
+    expect(buscarVendas(vendas, itens, clientes, 'creme ana')).toHaveLength(0)
+    // Só o nome mostra a cliente, não repete as vendas dela.
+    expect(buscarVendas(vendas, itens, clientes, 'maria')).toHaveLength(0)
   })
 })

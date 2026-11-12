@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useDados } from '../lib/dados'
+import { buscarClientes } from '../lib/busca'
 import type { Aba } from '../App'
 import {
   dataBR,
@@ -351,7 +352,7 @@ function EscolherCliente({
   const [erro, setErro] = useState('')
 
   const termo = semAcento(busca)
-  const lista = clientes.filter((c) => semAcento(c.nome).includes(termo))
+  const lista = buscarClientes(clientes, busca)
   // As vendas já vêm da mais nova para a mais antiga.
   const recentes = [...new Set(vendas.map((v) => v.cliente_id))]
     .map((id) => clientes.find((c) => c.id === id))
@@ -385,7 +386,7 @@ function EscolherCliente({
             type="search"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Procurar pelo nome"
+            placeholder="Procurar nome ou telefone"
             aria-label="Procurar cliente"
           />
         </label>
