@@ -1,10 +1,10 @@
-import type { Cliente, Parcela, Venda, VendaItem } from './tipos'
+import type { Cliente, Parcela, Venda, VendaItem, VendaLembrete } from './tipos'
 import { dataBR, diaMes, diasAteAniversario, dinheiro, primeiroNome, somarDias } from './formato'
 
 export type Lembrete =
   | { tipo: 'aniversario'; cliente: Cliente; emDias: number; mensagem: string }
   | { tipo: 'parcela'; cliente: Cliente; parcela: Parcela; atrasada: boolean; mensagem: string }
-  | { tipo: 'recompra'; cliente: Cliente; item: VendaItem; mensagem: string }
+  | { tipo: 'recompra'; cliente: Cliente; item: VendaItem; lembrete: VendaLembrete; mensagem: string }
 
 export const DIAS_ANIVERSARIO = 3
 export const DIAS_PARCELA = 3
@@ -16,6 +16,7 @@ export function montarLembretes(
   vendas: Venda[],
   parcelas: Parcela[],
   itens: VendaItem[],
+  lembretesDeVenda: VendaLembrete[],
 ): Lembrete[] {
   const porId = new Map(clientes.map((c) => [c.id, c]))
   const clienteDaVenda = new Map(vendas.map((v) => [v.id, porId.get(v.cliente_id)]))
@@ -58,19 +59,22 @@ export function montarLembretes(
     })
   }
 
-  const recompras = itens
-    .filter((i) => i.recompra_em && !i.recompra_avisada && i.recompra_em <= hoje)
-    .sort((a, b) => a.recompra_em!.localeCompare(b.recompra_em!))
-  for (const i of recompras) {
-    const c = clienteDaVenda.get(i.venda_id)
-    if (!c) continue
+  const itemPorId = new Map(itens.map((i) => [i.id, i]))
+  const recompras = lembretesDeVenda
+    .filter((l) => !l.avisado && l.lembrar_em <= hoje)
+    .sort((a, b) => a.lembrar_em.localeCompare(b.lembrar_em))
+  for (const l of recompras) {
+    const i = itemPorId.get(l.venda_item_id)
+    const c = i && clienteDaVenda.get(i.venda_id)
+    if (!i || !c) continue
+    // A descrição é o que ela quer dizer à cliente; sem descrição, vai a mensagem padrão.
+    const recado = l.descricao.trim() || 'Está na hora de repor? Posso separar para você!'
     lista.push({
       tipo: 'recompra',
       cliente: c,
       item: i,
-      mensagem:
-        `Oi ${primeiroNome(c.nome)}, tudo bem? Já faz um tempinho que você levou ${i.nome}. ` +
-        `Está na hora de repor? Posso separar para você!`,
+      lembrete: l,
+      mensagem: `Oi ${primeiroNome(c.nome)}, tudo bem? Já faz um tempinho que você levou ${i.nome}. ${recado}`,
     })
   }
 

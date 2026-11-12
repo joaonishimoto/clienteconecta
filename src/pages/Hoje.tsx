@@ -8,19 +8,19 @@ import { Avatar, Aviso, BotaoWhatsapp, Vazio } from '../componentes'
 import { IconeBolo, IconeCheck, IconeMoeda, IconeRepor } from '../icones'
 
 export function Hoje() {
-  const { perfil, clientes, vendas, parcelas, itens, recarregar } = useDados()
+  const { perfil, clientes, vendas, parcelas, itens, vendaLembretes, recarregar } = useDados()
   const [erro, setErro] = useState('')
   const hoje = hojeISO()
   const lembretes = useMemo(
-    () => montarLembretes(hoje, clientes, vendas, parcelas, itens),
-    [hoje, clientes, vendas, parcelas, itens],
+    () => montarLembretes(hoje, clientes, vendas, parcelas, itens, vendaLembretes),
+    [hoje, clientes, vendas, parcelas, itens, vendaLembretes],
   )
 
   const cobrancas = lembretes.filter((l) => l.tipo === 'parcela')
   const aniversarios = lembretes.filter((l) => l.tipo === 'aniversario')
   const recompras = lembretes.filter((l) => l.tipo === 'recompra')
 
-  async function alterar(tabela: 'parcelas' | 'venda_itens', id: string, mudanca: Record<string, unknown>) {
+  async function alterar(tabela: 'parcelas' | 'venda_lembretes', id: string, mudanca: Record<string, unknown>) {
     setErro('')
     const { error } = await supabase.from(tabela).update(mudanca).eq('id', id)
     if (error) setErro('Não foi possível salvar. Confira a internet e tente de novo.')
@@ -36,7 +36,7 @@ export function Hoje() {
   const partes = [
     cobrancas.length && `${cobrancas.length} ${cobrancas.length === 1 ? 'cobrança' : 'cobranças'}`,
     aniversarios.length && `${aniversarios.length} ${aniversarios.length === 1 ? 'aniversário' : 'aniversários'}`,
-    recompras.length && `${recompras.length} para repor`,
+    recompras.length && `${recompras.length} ${recompras.length === 1 ? 'lembrete' : 'lembretes'} de produto`,
   ].filter(Boolean)
   const resumo = partes.length
     ? `Para hoje: ${partes.length > 1 ? partes.slice(0, -1).join(', ') + ' e ' + partes[partes.length - 1] : partes[0]}.`
@@ -64,7 +64,7 @@ export function Hoje() {
       {erro && <Aviso>{erro}</Aviso>}
 
       {lembretes.length === 0 && (
-        <Vazio titulo="Tudo em dia">Quando houver cobrança, aniversário ou produto para repor, ele aparece aqui.</Vazio>
+        <Vazio titulo="Tudo em dia">Quando houver cobrança, aniversário ou lembrete de produto, ele aparece aqui.</Vazio>
       )}
 
       <div className="hoje-grupos">
@@ -123,23 +123,24 @@ export function Hoje() {
       )}
 
       {recompras.length > 0 && (
-        <Grupo icone={<IconeRepor />} titulo="Hora de repor" tom="repor">
+        <Grupo icone={<IconeRepor />} titulo="Lembretes de produtos" tom="repor">
           {recompras.map(
             (l) =>
               l.tipo === 'recompra' && (
                 <Tarefa
-                  key={l.item.id}
+                  key={l.lembrete.id}
                   lembrete={l}
                   detalhe={
                     <>
-                      Comprou <strong>{l.item.nome}</strong>
+                      <strong className="tarefa-titulo">{l.lembrete.titulo}</strong>
+                      Comprou {l.item.nome}
                     </>
                   }
                   acao={
                     <button
                       type="button"
                       className="botao-pequeno"
-                      onClick={() => alterar('venda_itens', l.item.id, { recompra_avisada: true })}
+                      onClick={() => alterar('venda_lembretes', l.lembrete.id, { avisado: true })}
                     >
                       <IconeCheck /> Já avisei
                     </button>

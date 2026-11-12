@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
-import type { Cliente, Parcela, Perfil, Produto, Venda, VendaItem } from './tipos'
+import type { Cliente, Parcela, Perfil, Produto, ProdutoLembrete, Venda, VendaItem, VendaLembrete } from './tipos'
 import type { Assinatura, Indicacao } from './assinatura'
 
 // Uma revendedora tem poucas centenas de registros: carregamos tudo de uma vez
@@ -13,6 +13,8 @@ type Dados = {
   vendas: Venda[]
   parcelas: Parcela[]
   itens: VendaItem[]
+  produtoLembretes: ProdutoLembrete[]
+  vendaLembretes: VendaLembrete[]
   assinatura: Assinatura | null
   indicacoes: Indicacao[]
   carregando: boolean
@@ -37,6 +39,8 @@ export function ProvedorDados({ userId, children }: { userId: string; children: 
     vendas: [],
     parcelas: [],
     itens: [],
+    produtoLembretes: [],
+    vendaLembretes: [],
     assinatura: null,
     indicacoes: [],
     carregando: true,
@@ -44,13 +48,15 @@ export function ProvedorDados({ userId, children }: { userId: string; children: 
   })
 
   const recarregar = useCallback(async () => {
-    const [perfil, clientes, produtos, vendas, parcelas, itens, assinatura, indicacoes] = await Promise.all([
+    const [perfil, clientes, produtos, vendas, parcelas, itens, produtoLembretes, vendaLembretes, assinatura, indicacoes] = await Promise.all([
       supabase.from('perfis').select('id, nome, empresa').eq('id', userId).maybeSingle(),
       supabase.from('clientes').select('id, nome, whatsapp, aniversario, observacao').order('nome'),
-      supabase.from('produtos').select('id, nome, preco, descricao, foto_url, recompra_dias').order('nome'),
+      supabase.from('produtos').select('id, nome, preco, descricao, foto_url').order('nome'),
       supabase.from('vendas').select('id, cliente_id, data, total').order('data', { ascending: false }),
       supabase.from('parcelas').select('id, venda_id, numero, de, valor, vencimento, pago_em').order('vencimento'),
-      supabase.from('venda_itens').select('id, venda_id, produto_id, nome, quantidade, preco, recompra_em, recompra_avisada'),
+      supabase.from('venda_itens').select('id, venda_id, produto_id, nome, quantidade, preco'),
+      supabase.from('produto_lembretes').select('id, produto_id, dias, titulo, descricao').order('dias').order('criado_em'),
+      supabase.from('venda_lembretes').select('id, venda_item_id, titulo, descricao, lembrar_em, avisado').eq('avisado', false),
       supabase
         .from('assinaturas')
         .select('pago_ate, codigo, indicada_por, meses_ganhos, assinatura_status, criado_em')
@@ -58,7 +64,7 @@ export function ProvedorDados({ userId, children }: { userId: string; children: 
         .maybeSingle(),
       supabase.from('indicacoes').select('status, premiada').eq('indicadora_id', userId),
     ])
-    const falha = [perfil, clientes, produtos, vendas, parcelas, itens].find((r) => r.error)
+    const falha = [perfil, clientes, produtos, vendas, parcelas, itens, produtoLembretes, vendaLembretes].find((r) => r.error)
     setEstado({
       perfil: perfil.data,
       clientes: clientes.data ?? [],
@@ -66,6 +72,8 @@ export function ProvedorDados({ userId, children }: { userId: string; children: 
       vendas: num(vendas.data ?? [], 'total'),
       parcelas: num(parcelas.data ?? [], 'valor'),
       itens: num(itens.data ?? [], 'preco'),
+      produtoLembretes: produtoLembretes.data ?? [],
+      vendaLembretes: vendaLembretes.data ?? [],
       // Antes de rodar a migração 003 essas tabelas não existem: o app segue funcionando sem a assinatura.
       assinatura: assinatura.data,
       indicacoes: indicacoes.data ?? [],

@@ -14,7 +14,25 @@ export type Produto = {
   preco: number
   descricao: string
   foto_url: string | null
-  recompra_dias: number | null
+}
+
+/** Lembrete que fica no produto do catálogo: "daqui a X dias, lembrar disto". */
+export type ProdutoLembrete = {
+  id: string
+  produto_id: string
+  dias: number
+  titulo: string
+  descricao: string
+}
+
+/** Lembrete criado numa venda: aparece na aba Hoje a partir de lembrar_em. */
+export type VendaLembrete = {
+  id: string
+  venda_item_id: string
+  titulo: string
+  descricao: string
+  lembrar_em: string
+  avisado: boolean
 }
 
 export type Parcela = {
@@ -34,8 +52,6 @@ export type VendaItem = {
   nome: string
   quantidade: number
   preco: number
-  recompra_em: string | null
-  recompra_avisada: boolean
 }
 
 export type Venda = {

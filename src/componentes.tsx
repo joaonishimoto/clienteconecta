@@ -1,6 +1,6 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
 import { iniciais } from './lib/formato'
-import { IconeSeta, IconeVoltar, IconeWhatsapp } from './icones'
+import { IconeAbrir, IconeSeta, IconeVoltar, IconeWhatsapp } from './icones'
 
 type Variante = 'principal' | 'secundario' | 'whatsapp' | 'perigo' | 'leve'
 
@@ -45,6 +45,63 @@ export function Campo({
       ) : (
         <input {...props} />
       )}
+      {dica && <span className="campo-dica">{dica}</span>}
+    </label>
+  )
+}
+
+/**
+ * Lista de escolha (select). Fica com a cara dos outros campos e com uma seta grande à direita,
+ * mas abre o seletor do próprio celular, que é o mais fácil de usar com o dedo.
+ */
+export function Escolha<T extends string | number>({
+  rotulo,
+  dica,
+  opcoes,
+  valor,
+  mudar,
+  ...props
+}: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'value' | 'onChange'> & {
+  rotulo: string
+  dica?: string
+  opcoes: { valor: T; nome: string }[]
+  valor: T
+  mudar: (v: T) => void
+}) {
+  return (
+    <label className="campo">
+      <span className="campo-rotulo">{rotulo}</span>
+      <span className="escolha">
+        <select
+          {...props}
+          value={String(valor)}
+          onChange={(e) => {
+            const o = opcoes.find((x) => String(x.valor) === e.target.value)
+            if (o) mudar(o.valor)
+          }}
+        >
+          {opcoes.map((o) => (
+            <option key={String(o.valor)} value={String(o.valor)}>
+              {o.nome}
+            </option>
+          ))}
+        </select>
+        <IconeAbrir className="escolha-seta" />
+      </span>
+      {dica && <span className="campo-dica">{dica}</span>}
+    </label>
+  )
+}
+
+export function CampoTexto({
+  rotulo,
+  dica,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { rotulo: string; dica?: string }) {
+  return (
+    <label className="campo">
+      <span className="campo-rotulo">{rotulo}</span>
+      <textarea rows={3} {...props} />
       {dica && <span className="campo-dica">{dica}</span>}
     </label>
   )
